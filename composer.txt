@@ -1,0 +1,2 @@
+composer require webklex/laravel-imap
+php artisan vendor:publish --provider="Webklex\IMAP\Providers\LaravelServiceProvider"
