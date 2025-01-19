@@ -15,12 +15,12 @@ Route::controller(UserController::class)->group(function() {
    Route::post('users/index', 'index');
    Route::post('users/create', 'create');
    Route::post('users/mail', 'mail');
-
+   Route::post('users/searchemail', 'searchEmail');
 });
 
 Route::controller(TicketController::class)->group(function() {
+   Route::post('tickets/index', 'index');     
    Route::post('tickets/create', 'create');
-   Route::post('tickets/test', 'test');      
 });
 
 

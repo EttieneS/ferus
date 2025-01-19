@@ -16,7 +16,8 @@ class Ticket extends Model {
       'id',
       'title',
       'subject',
-      'message_id'
+      'message_id',
+      'queue_id'
    ];
 }
 ?>

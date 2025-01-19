@@ -26,5 +26,14 @@ class UserController extends BaseController
         $user = User::create($input);
    
         return $this->sendResponse('success', 'User created successfully.');
-    }                   	
+    }
+
+    public function searchEmail(Request $request): JsonResponse {
+        $input = $request->all();
+        $partialEmail = $input['email'];
+
+        $users = User::where('email', 'like', '%'.$partialEmail.'%')->get('email');
+
+        return $this->sendResponse(UserResource::collection($users), 'e-mail addresses like $request');
+    }                  	
 }

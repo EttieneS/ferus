@@ -13,24 +13,22 @@ class CustomImapIdleCommand extends ImapIdleCommand {
     protected $description = 'Listen for new commands';
     protected $account = "default"; 
     
-    public function onNewMessage(Message $message) {
-        // while(true) {
-            $this->info("New message received: " . $message->subject); 
-            $this->info("Message id: " . $message->getTextBody());                
+    public function onNewMessage(Message $message) {        
+        $this->info("New message received: " . $message->subject); 
+        $this->info("Message id: " . $message->getTextBody());                
+        $queueId = 0;
 
-            if (!(Ticket::where('message_id', '=', $message->message_id))) {
-                $ticket = [
-                    'title' => $message->subject,
-                    'subject' => $message->getTextBody(),
-                    'message_id' => $message->message_id,
-                ];
+        if (!(Ticket::where('message_id', '=', $message->message_id))) {
+            $ticket = [
+                'title' => $message->subject,
+                'subject' => $message->getTextBody(),
+                'message_id' => $message->message_id,
+                'queue_id' => $queueId,
+            ];
 
-                Ticket::create($ticket);
+            Ticket::create($ticket);
 
-                $message->delete($expunge = true);
-            }
-        //     // $ticketsController = new TicketController();
-        //     // $`ticketsController->createTicketFromMessage($message);
-        // }        
+            $message->delete($expunge = true);
+        }
     }
 }
