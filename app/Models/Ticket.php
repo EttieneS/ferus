@@ -15,6 +15,8 @@ class Ticket extends Model {
    protected $fillable = [
       'id',
       'title',
+      'from',
+      'full_name',
       'subject',
       'message_id',
       'queue_id'

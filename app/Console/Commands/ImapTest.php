@@ -20,14 +20,18 @@ class ImapTest extends Command
 
         $folder = $client->getFolderByName('INBOX');
         $timeout = 1200;
-
+                        
         $folder->idle(function ($message) {
             try {                
                 $this->info("New message received: " . $message->subject);
-                $this->info("from address" . json_encode($message->getAttributes()['fromaddress']));
-                $this->info("get sender" . json_encode($message->getFrom()));
+                $this->info("from " . $message->getFrom()[0]->mail);                
+                $this->info("full_name " . json_encode($message->getFrom()[0]->personal));
+                $this->info("subject" . json_encode($message->getTextBody()));
+
                 $ticket = [
+                    'from' => $message->getFrom()[0]->mail,
                     'title' => $message->subject,
+                    'full_name' => $message->getFrom()[0]->personal,
                     'subject' => $message->getTextBody(),
                     'message_id' => $message->message_id,
                     'queue_id' => 1
