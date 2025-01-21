@@ -1,2 +1,6 @@
 composer require webklex/laravel-imap
 php artisan vendor:publish --provider="Webklex\IMAP\Providers\LaravelServiceProvider"
+
+composer require spatie/laravel-permission
+
+php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"

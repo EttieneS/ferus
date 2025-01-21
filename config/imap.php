@@ -45,8 +45,7 @@ return [
     |
     */
     'accounts' => [
-
-        'default' => [// account identifier
+        'default' => [
             'host'  => env('IMAP_HOST', 'imap.gmail.com'),
             'port'  => env('IMAP_PORT', 993),
             'protocol'  => env('IMAP_PROTOCOL', 'imap'), //might also use imap, [pop3 or nntp (untested)]
@@ -54,6 +53,25 @@ return [
             'validate_cert' => env('IMAP_VALIDATE_CERT', false),
             'username' => env('IMAP_USERNAME', 'semperadmelioratest@gmail.com'),
             'password' => env('IMAP_PASSWORD', 'pffafgvyinxwabah'),
+            'authentication' => env('IMAP_AUTHENTICATION', false),
+            'proxy' => [
+                'socket' => null,
+                'request_fulluri' => false,
+                'username' => null,
+                'password' => null,
+            ],
+            "timeout" => 30,
+            "extensions" => []
+        ],
+
+        'it' => [
+            'host'  => env('IMAP_HOST', 'imap.gmail.com'),
+            'port'  => env('IMAP_PORT', 993),
+            'protocol'  => env('IMAP_PROTOCOL', 'imap'), //might also use imap, [pop3 or nntp (untested)]
+            'encryption'    => env('IMAP_ENCRYPTION', 'false'), // Supported: false, 'ssl', 'tls', 'notls', 'starttls'
+            'validate_cert' => env('IMAP_VALIDATE_CERT', false),
+            'username' => env('IT_USERNAME', 'itsempermeliora@gmail.com'),
+            'password' => env('IT_PASSWORD', 'mnqbaronzncmcccl'),
             'authentication' => env('IMAP_AUTHENTICATION', false),
             'proxy' => [
                 'socket' => null,
