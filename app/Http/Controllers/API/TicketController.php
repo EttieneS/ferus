@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\API\BaseController as BaseController;
 use App\Http\Resources\TicketResource;
 use Illuminate\Http\JsonResponse;
-use Webklex\PHPIMAP\Message;
 use App\Models\Ticket;
+use Illuminate\Support\Facades\DB;
 
 class TicketController extends BaseController {
     
@@ -27,5 +27,16 @@ class TicketController extends BaseController {
 
     public function assignTo(Request $request): JsonResponse {
         return $this->sendResponse('success', 'Ticket created successfully.');
+    }
+
+    public function getByQueue(Request $request): JsonResponse {
+        $queueId = $request['queue_id'];
+        
+        $tickets = DB::table('tickets')
+            ->where('queue_id', '=', $queueId)
+            ->get();
+
+
+        return $this->sendResponse(new TicketResource($tickets), 'All tickets returned.');        
     }
 }
