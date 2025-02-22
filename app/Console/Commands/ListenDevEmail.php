@@ -27,26 +27,23 @@ class ListenDevEmail extends Command
                 $this->info("New message received: " . $message->subject);
                 $this->info("from " . $message->getFrom()[0]->mail);
 
-                $ticket = [
-                    //TODO from and full name is duplicate data in customer
-                    'from' => $message->getFrom()[0]->mail,
-                    'title' => $message->subject,
-                    'full_name' => $message->getFrom()[0]->personal,
-                    'subject' => $message->getTextBody(),
-                    'message_id' => $message->message_id,
-                    'queue_id' => 1
-                ];
-
                 $customer = [
                     'full_name' => $message->getFrom()[0]->personal,
                     'email' => $message->getFrom()[0]->mail,
                 ];
 
-
                 $customer = Customer::where('email', $customer['email'])->first();
                 if (!$customer) {
                     Customer::create($customer);            
                 }
+
+                $ticket = [                      
+                    'customer_id' => $customer->id,                  
+                    'title' => $message->subject,                    
+                    'subject' => $message->getTextBody(),
+                    'message_id' => $message->message_id,
+                    'queue_id' => 1
+                ];                                
 
                 Ticket::create($ticket);
 

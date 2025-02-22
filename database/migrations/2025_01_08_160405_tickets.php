@@ -10,6 +10,8 @@ return new class extends Migration
         Schema::create('tickets', function (Blueprint $table) {
             $table->bigInteger('id')->primary()->startingValue(0);
             $table->string('title');
+            $table->string('from');
+            $table->string('full_name');
             $table->string('description');
             $table->integer('priority')->default(0);
             $table->integer('status')->default(0);

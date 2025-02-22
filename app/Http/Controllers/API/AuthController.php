@@ -14,7 +14,7 @@ class AuthController extends BaseController {
     public function login(Request $request): JsonResponse {
         if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){ 
             $user = Auth::user(); 
-            $success['token'] = $user()->createToken('semperadmeliora')->plainTextToken; 
+            $success['token'] = $user->createToken('semperadmeliora')->plainTextToken; 
             $success['user'] = $user;
 
             header('Content-Type', 'html');

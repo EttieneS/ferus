@@ -32,7 +32,7 @@ class UserController extends BaseController
         $input = $request->all();
         $partialEmail = $input['email'];
 
-        $users = User::where('email', 'like', '%'.$partialEmail.'%')->get('email');
+        $users = User::where('email', 'like', '%'.$partialEmail.'%')->get();
 
         return $this->sendResponse(UserResource::collection($users), 'e-mail addresses like $request');
     }                  	

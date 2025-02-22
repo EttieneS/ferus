@@ -8,19 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('tickets', function (Blueprint $table) {
-            $table->integer('from');
-            $table->string('full_name');
-            $table->string('subject');                        
+        Schema::table('tickets', function (Blueprint $table) {                                                    
         });
     }
  
     public function down(): void
     {
-        Schema::table('tickets', function (Blueprint $table) {
-            $table->dropColumn('from');
-            $table->dropColumn('full_name');                        
-            $table->dropColumn('subject');                        
+        Schema::table('tickets', function (Blueprint $table) {                  
         });
     }
 };
