@@ -8,13 +8,14 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^11.31",
-        "laravel/sanctum": "^4.0",
+        "laravel/sanctum": "*",
         "laravel/tinker": "^2.9",
         "spatie/laravel-permission": "^6.10",
         "webklex/laravel-imap": "^4.1",
         "webklex/php-imap": "^4.1"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^3.5",
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.1",
         "laravel/pint": "^1.13",
@@ -58,7 +59,9 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                 "barryvdh/laravel-ide-helper"
+            ]
         }
     },
     "config": {

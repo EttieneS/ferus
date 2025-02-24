@@ -6,10 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void {
-        //was already created with spatie :)
+        Schema::table('tickets', function (Blueprint $table) {
+            $table->string('subject', 140)->change();
+        });
     }
-   
+
     public function down(): void {
-        
+        Schema::table('tickets', function (Blueprint $table) {
+            $table->string('subject')->change();
+        });
     }
 };

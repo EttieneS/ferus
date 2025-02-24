@@ -5,18 +5,18 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up() {
-        Schema::table('tickets', function (Blueprint $table) {            
-            $table->dropColumn(['from', 'full_name']);            
+    public function up(): void {
+        Schema::table('tickets', function (Blueprint $table) {
+            $table->dropColumn(['from', 'full_name']);
             $table->unsignedBigInteger('customer_id')->nullable()->after('id');
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
         });
     }
 
-    public function down() {
-        Schema::table('tickets', function (Blueprint $table) {            
+    public function down(): void {
+        Schema::table('tickets', function (Blueprint $table) {
             $table->string('from')->nullable();
-            $table->string('full_name')->nullable();            
+            $table->string('full_name')->nullable();
             $table->dropForeign(['customer_id']);
             $table->dropColumn('customer_id');
         });

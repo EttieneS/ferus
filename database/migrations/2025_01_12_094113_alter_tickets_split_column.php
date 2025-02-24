@@ -4,18 +4,15 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {    
-    public function up(): void
-    {
+return new class extends Migration {
+    public function up(): void {
         Schema::table('tickets', function (Blueprint $table) {
             $table->boolean('split')->default(0);
-            $table->dropColumn('priority');
-            $table->dropColumn('status');
+            $table->dropColumn(['priority', 'status']);
         });
     }
 
-    public function down(): void
-    {
+    public function down(): void {
         Schema::table('tickets', function (Blueprint $table) {
             $table->dropColumn('split');
             $table->integer('priority');

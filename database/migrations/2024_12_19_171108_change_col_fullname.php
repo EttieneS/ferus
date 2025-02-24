@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up() {
         Schema::table('customers', function (Blueprint $table) {
-            $table->dropColumn(['first_name', 'last_name']); 
-            $table->string('full_name')->after('id'); 
+            $table->dropColumn(['first_name', 'last_name']);
+            $table->string('full_name')->after('id');
         });
     }
 
@@ -20,4 +20,3 @@ return new class extends Migration {
         });
     }
 };
-

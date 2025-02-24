@@ -10,28 +10,33 @@ use App\Models\Ticket;
 use Illuminate\Support\Facades\DB;
 use App\Services\TicketService;
 
-class TicketController extends BaseController {
+class TicketController extends BaseController
+{
     protected TicketService $ticketService;
 
-    public function __construct(TicketService $ticketService) {
+    public function __construct(TicketService $ticketService)
+    {
         $this->ticketService = $ticketService;
     }
 
-    public function index(): JsonResponse {
+    public function index(): JsonResponse
+    {
         $tickets = Ticket::all();
 
         return $this->sendResponse(new TicketResource($tickets), 'All tickets returned.');
     }
-        
-    public function create(Request $request): JsonResponse {
+
+    public function create(Request $request): JsonResponse
+    {
         $ticket = $request->all();
 
         Ticket::create($ticket);
 
         return $this->sendResponse('success', 'Ticket created successfully.');
-    }    
+    }
 
-    public function assignTicket(Request $request): JsonResponse {
+    public function assignTicket(Request $request): JsonResponse
+    {
         // $validatedData = $request->validate([
         //     'ticket_id' => 'required|integer|exists:tickets,id',
         //     'queue_ids' => 'required|array',
@@ -40,8 +45,10 @@ class TicketController extends BaseController {
         //     'status' => 'nullable|string|max:255',
         //     'priority' => 'nullable|string|max:255'
         // ]);
+        
+        $data = $request->all();
 
-        $assignedTickets = $this->ticketService->assignTicketToQueue($request);
+        $assignedTickets = $this->ticketService->assignTicketToQueues($data);
 
         return response()->json([
             'message' => 'Ticket assigned successfully!',
@@ -49,18 +56,20 @@ class TicketController extends BaseController {
         ], 201);
     }
 
-    public function assignTo(Request $request): JsonResponse {
+    public function assignTo(Request $request): JsonResponse
+    {
         return $this->sendResponse('success', 'Ticket created successfully.');
     }
 
-    public function getByQueue(Request $request): JsonResponse {
+    public function getByQueue(Request $request): JsonResponse
+    {
         $queueId = $request['queue_id'];
-        
+
         $tickets = DB::table('tickets')
             ->where('queue_id', '=', $queueId)
             ->get();
 
 
-        return $this->sendResponse(new TicketResource($tickets), 'All tickets returned.');        
+        return $this->sendResponse(new TicketResource($tickets), 'All tickets returned.');
     }
 }
