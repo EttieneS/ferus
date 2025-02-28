@@ -10,8 +10,7 @@ class Role extends Model {
    
    protected $primaryKey = 'id';
    
-   protected $fillable = [
-      'id',
+   protected $fillable = [      
       'name',
       'guard_name',
    ];

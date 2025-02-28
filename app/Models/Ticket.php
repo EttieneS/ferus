@@ -1,25 +1,31 @@
 <?php
-  
+
 namespace App\Models;
-  
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Farm;
+
 
 class Ticket extends Model {
-   use HasFactory;
-   
-   protected $primaryKey = 'id';
-   
-   protected $fillable = [
-      'id',
-      'title',
-      'from',
-      'full_name',
-      'subject',
-      'message_id',
-      'queue_id'
-   ];
+    use HasFactory;
+
+    protected $guarded = [
+        'id'
+    ];
+
+    protected $fillable = [      
+        'title',
+        'from',
+        'full_name',
+        'subject',
+        'message_id',        
+        'customer_id',
+    ];
+    
+    public function customer() {
+        return $this->belongsTo(Customer::class, 'id', 'customer_id');
+    }
+
+    
 }
-?>

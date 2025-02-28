@@ -41,7 +41,9 @@ class TicketController extends BaseController {
         //     'priority' => 'nullable|string|max:255'
         // ]);
 
-        $assignedTickets = $this->ticketService->assignTicketToQueue($request);
+        $data = $request->all();
+
+        $assignedTickets = $this->ticketService->assignTicketToQueues($data);
 
         return response()->json([
             'message' => 'Ticket assigned successfully!',

@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tickets', function (Blueprint $table) {            
-            $table->string('subject', 2000)->change();
+        Schema::table('queues', function (Blueprint $table) {
+            //
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tickets', function (Blueprint $table) {
-            $table->renameColumn('subject', 'description');
+        Schema::table('queues', function (Blueprint $table) {
+            //
         });
     }
 };

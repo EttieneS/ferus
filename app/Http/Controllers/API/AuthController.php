@@ -13,13 +13,14 @@ class AuthController extends BaseController {
     
     public function login(Request $request): JsonResponse {
         if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){ 
-            $user = Auth::user(); 
+            $user = Auth::user();
+            
             $success['token'] = $user->createToken('semperadmeliora')->plainTextToken; 
             $success['user'] = $user;
 
-            header('Content-Type', 'html');
-            header('Access-Control-Allow-Origin', 'localhost:4200');
-            header('Access-Control-Allow-Headers', 'Origin, Content-Type, Authorization');
+            // header('Content-Type', 'html');
+            // header('Access-Control-Allow-Origin', 'localhost:4200');
+            // header('Access-Control-Allow-Headers', 'Origin, Content-Type, Authorization');
 
             return $this->sendResponse($success, 'User login successfully.');
         } 
