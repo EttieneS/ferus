@@ -5,10 +5,10 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\Api\TeamController;
-use App\Http\Controllers\Api\RoleController;
-use App\Http\Controllers\Api\CustomerController;
-use App\Http\Controllers\Api\QueuedTicketController;
+use App\Http\Controllers\API\RoleController;
+use App\Http\Controllers\API\CustomerController;
+use App\Http\Controllers\API\TicketController;
+use App\Http\Controllers\API\QueueController;
 
 Route::controller(AuthController::class)->group(function() {
    Route::post('auth/login', 'login');
@@ -21,29 +21,24 @@ Route::controller(UserController::class)->group(function() {
    Route::post('users/searchemail', 'searchEmail');
 });
 
-Route::controller(TeamController::class)->group(function () {
-    Route::post('/teams/index', 'index');
-    Route::post('/teams/create', 'create');
-    Route::post('/teams/getbyid', 'getbyid');
-    Route::delete('/teams/deletebyid', 'deletebyid');
+// Route::controller(RoleController::class)->group(function () {
+//     Route::post('/roles/index', [RoleController::class, 'index']);
+//     Route::post('/roles/store', [RoleController::class, 'store']);
+// });
 
-    Route::post('/teams/{id}/add-member', 'addMember');
-    Route::get('/teams/{id}/members', 'getMembers');
+// Route::controller(CustomerController::class)->group(function () {
+//     Route::post('/customers/index', [CustomerController::class, 'index']);
+//     Route::post('/customers/create', [CustomerController::class, 'create']);
+// });
+
+Route::controller(TicketController::class)->group(function () {
+    Route::post('tickets/index', [TicketController::class, 'index']);
+    // Route::post('/tickets/create', [TicketController::class, 'create']);
+    Route::post('/tickets/assign-user', [TicketController::class, 'assignUser']);
 });
 
-Route::controller(RoleController::class)->group(function () {
-    Route::post('/roles/index', [RoleController::class, 'index']);
-    Route::post('/roles/store', [RoleController::class, 'store']);
-});
-
-Route::controller(CustomerController::class)->group(function () {
-    Route::post('/customers/index', [CustomerController::class, 'index']);
-    Route::post('/customers/create', [CustomerController::class, 'create']);
-});
-
-Route::controller(QueuedTicketController::class)->group(function () {
-    Route::post('/tickets/index', [QueuedTicketController::class, 'index']);
-    Route::post('/tickets/create', [QueuedTicketController::class, 'create']);
+Route::controller(QueueController::class)->group(function () {
+    Route::post('/queues/index', [QueueController::class, 'index']);
 });
 
 

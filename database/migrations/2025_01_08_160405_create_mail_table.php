@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {    
     public function up(): void {
-        Schema::create('tickets', function (Blueprint $table) {
+        Schema::create('mails', function (Blueprint $table) {
             $table->bigIncrements('id')->unsigned()->startingValue(0);                
             $table->string('subject');
             $table->text('message')->nullable();
@@ -15,12 +15,11 @@ return new class extends Migration {
             $table->timestamps();
             $table->softDeletes();
             
-            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('restrict');
         });
     }
 
     public function down(): void {
-        Schema::dropIfExists('tickets');
-        Schema::dropIfExists('queues');
+        Schema::dropIfExists('mails');  
     }
 };

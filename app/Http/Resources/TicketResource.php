@@ -6,14 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TicketResource extends JsonResource
-{
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(Request $request): array
-    {
-        return parent::toArray($request);
+{    
+    public function toArray(Request $request): array {
+        $data = parent::toArray($request);
+
+        return collect($data)->mapWithKeys(function ($value, $key) {
+            return [Str::camel($key) => $value];
+        })->all();
     }
 }

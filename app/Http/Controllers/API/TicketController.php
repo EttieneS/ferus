@@ -18,51 +18,19 @@ class TicketController extends BaseController {
     }
 
     public function index(): JsonResponse {
-        $tickets = Ticket::all();
-
-        return $this->sendResponse(new TicketResource($tickets), 'All tickets returned.');
-    }
-        
-    public function create(Request $request): JsonResponse {
-        $ticket = $request->all();
-
-        Ticket::create($ticket);
-
-        return $this->sendResponse('success', 'Ticket created successfully.');
-    }    
-
-    public function assignTicket(Request $request): JsonResponse {
-        // $validatedData = $request->validate([
-        //     'ticket_id' => 'required|integer|exists:tickets,id',
-        //     'queue_ids' => 'required|array',
-        //     'queue_ids.*' => 'integer|exists:queues,id',
-        //     'assigned_by' => 'required|integer|exists:users,id',
-        //     'status' => 'nullable|string|max:255',
-        //     'priority' => 'nullable|string|max:255'
-        // ]);
-
-        $data = $request->all();
-
-        $assignedTickets = $this->ticketService->assignTicketToQueues($data);
-
-        return response()->json([
-            'message' => 'Ticket assigned successfully!',
-            'data' => $assignedTickets
-        ], 201);
+        return response()->json(
+            $this->ticketService->getAllTickets()
+        );
     }
 
-    public function assignTo(Request $request): JsonResponse {
-        return $this->sendResponse('success', 'Ticket created successfully.');
+    public function assignUser(Request $request): JsonResponse {
+        $ticket = Ticket::fromRequest($request);
+        $response = $this->ticketService->assignUser($ticket);
+        return response()->json($response);
     }
 
-    public function getByQueue(Request $request): JsonResponse {
-        $queueId = $request['queue_id'];
-        
-        $tickets = DB::table('tickets')
-            ->where('queue_id', '=', $queueId)
-            ->get();
-
-
-        return $this->sendResponse(new TicketResource($tickets), 'All tickets returned.');        
+    public function getTicketsByQueue(int $queueId): JsonResponse {
+        $tickets = $this->ticketService->getTicketsByQueue($queueId);
+        return response()->json($tickets);
     }
 }
