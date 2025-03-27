@@ -5,8 +5,8 @@ namespace App\DTOs;
 use App\Models\Ticket;
 
 class TicketViewDTO {
-    public ?array $ticket;
-    public ?array $mail;
+    public array $ticket;
+    public array $incomingMail;
     public ?array $assignedTo;
     public ?array $assignedBy;
     public ?array $customer;
@@ -15,7 +15,7 @@ class TicketViewDTO {
     public function __construct(Ticket $ticket) {
         $this->ticket = $ticket->only([
             'id',
-            'mail_id',
+            'incoming_mail_id',
             'queue_id',
             'assigned_by',
             'assigned_to',
@@ -23,11 +23,12 @@ class TicketViewDTO {
             'priority',
             'split'
         ]);
-        $this->mail = optional($ticket->mail)?->only(['id', 'subject', 'message']);
+
+        $this->incomingMail = $ticket->incomingMail ? $ticket->incomingMail->only(['id', 'subject', 'body']) : null;
         $this->assignedTo = optional($ticket->assignedTo)?->only(['id', 'name', 'surname', 'email']);
         $this->assignedBy = optional($ticket->assignedBy)?->only(['id', 'name', 'surname', 'email']);
-        $this->customer = optional($ticket->customer)?->only(['id', 'full_name', 'email']);
-        $this->queue = optional($ticket->queue)?->only(['id', 'name']);
+        $this->customer = $ticket->incomingMail->customer->only(['id', 'full_name', 'email']);
+        $this->queue = $ticket->queue->only(['id', 'name']);
     }
 
     public static function fromCollection($tickets) {

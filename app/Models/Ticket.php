@@ -18,7 +18,7 @@ class Ticket extends Model {
     ];
 
     protected $fillable = [
-        'mail_id',
+        'incoming_mail_id',
         'assigned_by',
         'assigned_to',
         'queue_id',
@@ -33,8 +33,8 @@ class Ticket extends Model {
         'priority' => 'integer',
     ];
 
-    public function mail(): BelongsTo {
-        return $this->belongsTo(Mail::class, 'mail_id', 'id');
+    public function incomingMail(): BelongsTo {
+        return $this->belongsTo(IncomingMail::class, 'incoming_mail_id', 'id');
     }
 
     public function assignedBy(): BelongsTo {
@@ -50,16 +50,28 @@ class Ticket extends Model {
     }
 
     public function customer() {
-        return $this->hasOneThrough(Customer::class, Mail::class, 'id', 'id', 'mail_id', 'customer_id');
+        return $this->hasOneThrough(
+            Customer::class,
+            IncomingMail::class,
+            'id',
+            'id',
+            'incoming_mail_id',
+            'customer_id'
+        );
     }
 
     public static function fromRequest(Request $request): self {
-        return new self([
-            'id' => $request->input('id'),
-            'assigned_to' => $request->input('assigned_to'),
-            'assigned_by' => $request->input('assigned_by'),
-            'queue'
-        ]);
+        return new self($request->only([
+            'id',
+            'customer_id',
+            'incoming_mail_id',
+            'assigned_to',
+            'assigned_by',
+            'queue_id',
+            'status',
+            'priority',
+            'split'
+        ]));
     }
 
     public static function getCollection(Collection $tickets): array {

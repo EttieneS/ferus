@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Customer extends Model
-{
+class Customer extends Model {
     use HasFactory, SoftDeletes;
 
     protected $primaryKey = 'id';
@@ -28,9 +27,5 @@ class Customer extends Model
 
     public function tickets() {
         return $this->hasMany(Ticket::class, 'customer_id', 'id');
-    }
-
-    public function queuedTickets() {
-        return $this->hasMany(QueuedTicket::class, 'customer_id', 'id');
     }
 }

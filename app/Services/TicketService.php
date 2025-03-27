@@ -10,7 +10,7 @@ use App\DTOs\TicketViewDTO;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
-
+use Illuminate\Http\Request;
 
 use Exception;
 
@@ -44,7 +44,7 @@ class TicketService {
         // public function getAllTickets(): JsonResponse {
         // return response()->json(['message' => 'here']);
 
-        $tickets = Ticket::with(['assignedTo', 'assignedBy', 'customer', 'queue'])
+        $tickets = Ticket::with(['incomingMail', 'assignedTo', 'assignedBy', 'queue'])
             ->paginate($this->paginationLimit);
 
         $transformedTickets = TicketViewDTO::fromCollection($tickets);
@@ -60,8 +60,6 @@ class TicketService {
             ]
         );
     }
-
-
 
     public function assignUser(Ticket $ticket): Ticket {
 
@@ -101,5 +99,41 @@ class TicketService {
             $tickets->currentPage(),
             ['path' => request()->url()]
         );
+    }
+
+    public function forwardTicketToQueue(Ticket $ticket) {
+        try {
+            DB::beginTransaction();
+
+
+            $existingTicket = Ticket::find($ticket->id);
+
+            if (!$existingTicket) {
+                throw new \Exception("Ticket not found.");
+            }
+
+            $existingTicket->queue_id = $ticket->queue_id;
+            $existingTicket->save();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Ticket successfully forwarded.',
+                'ticket' => new TicketViewDTO($existingTicket),
+                'status' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Failed to forward ticket to queue', [
+                'error' => $e->getMessage(),
+                'ticket_id' => $ticket->id ?? 'N/A'
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An unexpected error occurred while processing your request.',
+            ], 500);
+        }
     }
 }

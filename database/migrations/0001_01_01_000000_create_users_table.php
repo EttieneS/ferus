@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void {
         Schema::create('users', function (Blueprint $table) {
-            $table->bigIncrements('id')->unsigned()->startingValue(0);       
+            $table->bigIncrements('id')->unsigned()->startingValue(0);
             $table->string('name');
             $table->string('surname');
             $table->string('email')->unique();
@@ -33,7 +33,7 @@ return new class extends Migration {
             $table->integer('last_activity')->index();
         });
     }
-    
+
     public function down(): void {
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');

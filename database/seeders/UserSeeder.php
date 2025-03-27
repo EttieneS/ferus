@@ -35,7 +35,7 @@ class UserSeeder extends Seeder {
             ],
             [
                 'name' => 'VoipDev',
-                'surname' => 'Perl',
+                'surname' => 'CanOnlyPerl',
                 'email' => 'voipdev@yahoo.com',
                 'password' => Hash::make('12345'),
                 'created_at' => now(),

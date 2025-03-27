@@ -49,6 +49,26 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        'it' => [
+            'transport' => 'smtp',
+            'host' => env('MAIL_IT_HOST'),
+            'port' => env('MAIL_IT_PORT'),
+            'encryption' => env('MAIL_IT_ENCRYPTION'),
+            'username' => env('MAIL_IT_USERNAME'),
+            'password' => env('MAIL_IT_PASSWORD'),
+        ],
+
+        'dev' => [
+            'address' => env('MAIL_DEV_FROM_ADDRESS', 'semperadmelioratest@gmail.com'),
+            'name' => env('MAIL_DEV_FROM_NAME', 'Affinity Health Dev Dept'),
+            'transport' => 'smtp',
+            'host' => env('MAIL_DEV_HOST'),
+            'port' => env('MAIL_DEV_PORT'),
+            'encryption' => env('MAIL_DEV_ENCRYPTION'),
+            'username' => env('MAIL_DEV_USERNAME'),
+            'password' => env('MAIL_DEV_PASSWORD'),
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
