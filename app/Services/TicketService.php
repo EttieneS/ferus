@@ -11,6 +11,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 use Exception;
 
@@ -41,9 +42,6 @@ class TicketService {
     // }
 
     public function getAllTickets(): LengthAwarePaginator {
-        // public function getAllTickets(): JsonResponse {
-        // return response()->json(['message' => 'here']);
-
         $tickets = Ticket::with(['incomingMail', 'assignedTo', 'assignedBy', 'queue'])
             ->paginate($this->paginationLimit);
 
@@ -61,12 +59,13 @@ class TicketService {
         );
     }
 
-    public function assignUser(Ticket $ticket): Ticket {
-
+    public function assignUser(Ticket $ticket): JsonResponse {
         DB::beginTransaction();
 
         try {
             $existingTicket = Ticket::find($ticket->id);
+
+            Log::error($existingTicket);
 
             if (!$existingTicket) {
                 $existingTicket = new Ticket();
@@ -79,37 +78,45 @@ class TicketService {
 
             DB::commit();
 
-            return $existingTicket;
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Ticket successfully assigned to user.',
+            ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             throw new \Exception("Failed to assign ticket: " . $e->getMessage());
         }
     }
 
-    public function getTicketsByQueue(int $queueId): LengthAwarePaginator {
+    // public function getTicketsByQueue(int $queueId): LengthAwarePaginator {
 
-        $tickets = Ticket::where('queue_id', $queueId)
-            ->with(['assignedTo', 'assignedBy', 'customer', 'queue'])
-            ->paginate(10);
+    //     $tickets = Ticket::where('queue_id', $queueId)
+    //         ->with(['assignedTo', 'assignedBy', 'customer', 'queue'])
+    //         ->paginate(10);
 
-        return new LengthAwarePaginator(
-            TicketViewDTO::fromCollection($tickets->getCollection()),
-            $tickets->total(),
-            $tickets->perPage(),
-            $tickets->currentPage(),
-            ['path' => request()->url()]
-        );
-    }
+    //     return new LengthAwarePaginator(
+    //         TicketViewDTO::fromCollection($tickets->getCollection()),
+    //         $tickets->total(),
+    //         $tickets->perPage(),
+    //         $tickets->currentPage(),
+    //         ['path' => request()->url()]
+    //     );
+    // }
 
     public function forwardTicketToQueue(Ticket $ticket) {
         try {
             DB::beginTransaction();
 
-
             $existingTicket = Ticket::find($ticket->id);
 
             if (!$existingTicket) {
-                throw new \Exception("Ticket not found.");
+                throw new ModelNotFoundException('Ticket not found');
+                if (!$ticket) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Invalid ticket.',
+                    ], 400);
+                }
             }
 
             $existingTicket->queue_id = $ticket->queue_id;
@@ -118,10 +125,9 @@ class TicketService {
             DB::commit();
 
             return response()->json([
-                'message' => 'Ticket successfully forwarded.',
-                'ticket' => new TicketViewDTO($existingTicket),
-                'status' => 'success'
-            ]);
+                'status' => 'error',
+                'message' => 'Ticket sucessfully forwarded.',
+            ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -135,5 +141,23 @@ class TicketService {
                 'message' => 'An unexpected error occurred while processing your request.',
             ], 500);
         }
+    }
+
+    public function getTicketsByQueue(int $queueId): LengthAwarePaginator {
+        $tickets = Ticket::where('queue_id', $queueId)
+            ->with(['incomingMail', 'assignedTo', 'assignedBy', 'queue'])
+            ->paginate(10);
+
+        $transformedTickets = $tickets->getCollection()->transform(function ($ticket) {
+            return new TicketViewDTO($ticket);
+        });
+
+        return new LengthAwarePaginator(
+            $transformedTickets,
+            $tickets->total(),
+            $tickets->perPage(),
+            $tickets->currentPage(),
+            ['path' => request()->url()]
+        );
     }
 }

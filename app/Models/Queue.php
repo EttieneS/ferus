@@ -13,14 +13,10 @@ class Queue extends Model {
 
     protected $fillable = [
         'name',
-        'description',
+        'mailer',
     ];
 
     protected $casts = [
         'id' => 'integer',
     ];
-
-    public function assignedTickets() {
-        return $this->hasMany(QueuedTicket::class, 'queue_id');
-    }
 }

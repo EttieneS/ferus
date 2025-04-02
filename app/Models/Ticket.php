@@ -61,17 +61,13 @@ class Ticket extends Model {
     }
 
     public static function fromRequest(Request $request): self {
-        return new self($request->only([
-            'id',
-            'customer_id',
-            'incoming_mail_id',
-            'assigned_to',
-            'assigned_by',
-            'queue_id',
-            'status',
-            'priority',
-            'split'
-        ]));
+        $ticket = new self();
+        $ticket->id = $request->input('id');
+        $ticket->assigned_to = $request->input('assigned_to');
+        $ticket->assigned_by = $request->input('assigned_by');
+        $ticket->queue_id = $request->input('queue_id');
+
+        return $ticket;
     }
 
     public static function getCollection(Collection $tickets): array {

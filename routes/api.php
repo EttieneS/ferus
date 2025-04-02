@@ -10,10 +10,12 @@ use App\Http\Controllers\API\CustomerController;
 use App\Http\Controllers\API\IncomingMailController;
 use App\Http\Controllers\API\TicketController;
 use App\Http\Controllers\API\QueueController;
+use App\Http\Controllers\API\OutgoingMailController;
+use App\Models\OutgoingMail;
 
-// Route::controller(AuthController::class)->group(function () {
-//     Route::post('auth/login', 'login');
-// });
+Route::controller(AuthController::class)->group(function () {
+    Route::post('auth/login', 'login');
+});
 
 Route::controller(UserController::class)->group(function () {
     Route::post('users/index', 'index');
@@ -38,6 +40,7 @@ Route::controller(TicketController::class)->group(function () {
     Route::post('/tickets/assign-user', [TicketController::class, 'assignUser']);
     Route::post('/tickets/forward-queue', [TicketController::class, 'forwardTicketToQueue']);
     Route::post('/tickets/reply', [TicketController::class, 'reply']);
+    Route::post('/tickets/get-by-queue', [TicketController::class, 'getTicketsByQueue']);
 });
 
 Route::controller(QueueController::class)->group(function () {
@@ -46,4 +49,9 @@ Route::controller(QueueController::class)->group(function () {
 
 Route::controller(IncomingMailController::class)->group(function () {
     Route::post('/incoming-mail/store', [IncomingMailController::class, 'store']);
+});
+
+Route::controller(OutgoingMailController::class)->group(function () {
+    Route::post('/outgoing-mail/send', 'send');
+    Route::get('/outgoing-mail/test-send', 'testSend');
 });

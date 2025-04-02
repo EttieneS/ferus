@@ -40,7 +40,8 @@ class TicketController extends BaseController {
         return response()->json($response);
     }
 
-    public function getTicketsByQueue(int $queueId): JsonResponse {
+    public function getTicketsByQueue(Request $request): JsonResponse {
+        $queueId = $request->queue_id;
         $tickets = $this->ticketService->getTicketsByQueue($queueId);
         return response()->json($tickets);
     }
