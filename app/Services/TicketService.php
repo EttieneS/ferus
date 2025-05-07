@@ -44,7 +44,7 @@ class TicketService {
     // }
 
     public function getAllTickets(): LengthAwarePaginator {
-        $tickets = Ticket::with(['incomingMail', 'assignedTo', 'assignedBy', 'queue'])
+        $tickets = Ticket::with(['mail', 'assignedTo', 'assignedBy', 'queue'])
             ->paginate($this->paginationLimit);
 
         $transformedTickets = TicketViewDTO::fromCollection($tickets);
@@ -117,7 +117,7 @@ class TicketService {
                     Log::info('🆕 Creating ticket for user ID ' . $userId);
 
                     $new = Ticket::create([
-                        'incoming_mail_id' => $baseTicket->incoming_mail_id,
+                        'incoming_mail_id' => $baseTicket->mail_id,
                         'assigned_to' => $userId,
                         'assigned_by' => $data->assignedBy,
                         'queue_id' => $baseTicket->queue_id,

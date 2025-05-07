@@ -8,10 +8,10 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('tickets', function (Blueprint $table) {
             $table->bigIncrements('id')->unsigned();
-            $table->bigInteger('incoming_mail_id')->unsigned();
-            $table->bigInteger('queue_id')->unsigned();
-            $table->bigInteger('assigned_by')->unsigned()->nullable();
-            $table->bigInteger('assigned_to')->unsigned()->nullable();
+            $table->unsignedBigInteger('mail_id');
+            $table->unsignedBigInteger('queue_id');
+            $table->unsignedBigInteger('assigned_by')->nullable();
+            $table->unsignedBigInteger('assigned_to')->nullable();
             $table->integer('status')->default(0);
             $table->integer('priority')->default(0);
             $table->boolean('split')->default(false);
@@ -19,10 +19,10 @@ return new class extends Migration {
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('incoming_mail_id')->references('id')->on('incoming_mails')->onDelete('restrict'); // Only an incoming mail can create a ticket
+            $table->foreign('mail_id')->references('id')->on('mails')->onDelete('restrict');
             $table->foreign('queue_id')->references('id')->on('queues')->onDelete('restrict');
-            $table->foreign('assigned_by')->references('id')->on('users')->onDelete('restrict')->nullable();
-            $table->foreign('assigned_to')->references('id')->on('users')->onDelete('restrict')->nullable();
+            $table->foreign('assigned_by')->references('id')->on('users')->onDelete('restrict');
+            $table->foreign('assigned_to')->references('id')->on('users')->onDelete('restrict');
         });
     }
 

@@ -12,7 +12,7 @@ class MailRecipient extends Model {
         'mail_id',
         'recipient_id',
         'recipient_type', // 0 = user, 1 = customer
-        'recipient_role', // 0 = to, 1 = cc
+        'send_type', // 0 = to, 1 = cc
     ];
 
     public function mail() {

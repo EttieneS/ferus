@@ -8,10 +8,9 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('mails', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->foreignId('ticket_id')->constrained()->onDelete('restrict');
             $table->unsignedBigInteger('user_id');
-            $table->unsignedTinyInteger('user_type'); // 0 = user, 1 = customer
-            $table->unsignedTinyInteger('mail_type'); // 0 = incoming, 1 = outgoing
+            $table->unsignedTinyInteger('user_type');
+            $table->unsignedTinyInteger('mail_type');
             $table->string('subject');
             $table->longText('body');
             $table->timestamps();

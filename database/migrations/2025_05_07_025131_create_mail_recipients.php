@@ -11,8 +11,8 @@ return new class extends Migration {
             $table->bigIncrements('id');
             $table->foreignId('mail_id')->constrained('mails')->onDelete('restrict');
             $table->unsignedBigInteger('recipient_id');
-            $table->unsignedTinyInteger('recipient_type'); // 0 = user, 1 = customer
-            $table->enum('mail_role', ['to', 'cc']);
+            $table->unsignedTinyInteger('recipient_type');
+            $table->unsignedTinyInteger('send_type');
             $table->timestamps();
             $table->softDeletes();
 

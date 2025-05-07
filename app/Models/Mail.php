@@ -28,7 +28,7 @@ class Mail extends Model {
         return $this->belongsTo(User::class, 'user_id')->where('user_type', 0);
     }
 
-    public function senderCustomer() {
-        return $this->belongsTo(Customer::class, 'user_id')->where('user_type', 1);
+    public function customerSend() {
+        return $this->belongsTo(Customer::class, 'user_id');
     }
 }

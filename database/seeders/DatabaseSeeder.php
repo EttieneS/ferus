@@ -12,11 +12,10 @@ class DatabaseSeeder extends Seeder {
             SlaSeeder::class,
             QueueSeeder::class,
             UserSeeder::class,
-            IncomingMailSeeder::class,
             UserRoleSeeder::class,
-            OutgoingMailSeeder::class,
             CustomerSeeder::class,
-            OutgoingMailRecipientSeeder::class,
+            TicketSeeder::class,
+            MailRecipientSeeder::class,
         ]);
     }
 }
