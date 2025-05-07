@@ -1,14 +1,15 @@
 <?php
 
 namespace App\Http\Controllers\API;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Services\RoleService;
 
-class RoleController extends Controller {
+use App\Http\Controllers\API\BaseController;
+use Illuminate\Http\Request;
+use App\Services\UserRoleService;
+
+class UserRoleController extends BaseController {
     protected $roleService;
 
-    public function __construct(RoleService $roleService) {
+    public function __construct(UserRoleService $roleService) {
         $this->roleService = $roleService;
     }
 
@@ -16,7 +17,7 @@ class RoleController extends Controller {
         return response()->json($this->roleService->getAll());
     }
 
-    public function store(Request $request) {        
+    public function store(Request $request) {
         $request->validate([
             'name' => 'required|string|unique:roles,name|max:255',
         ]);
@@ -26,5 +27,3 @@ class RoleController extends Controller {
         return response()->json(['message' => 'Role created successfully', 'role' => $role], 201);
     }
 }
-
-?>

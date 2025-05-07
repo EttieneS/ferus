@@ -4,18 +4,18 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{    
+return new class extends Migration {
     public function up(): void {
-        Schema::create('teams', function (Blueprint $table) {
+        Schema::create('user_roles', function (Blueprint $table) {
             $table->id();
-            $table->string('team_name');
+            $table->string('name');
             $table->timestamps();
-            $table->timestamp('deleted_at')->nullable();
+
+            $table->unique('name');
         });
     }
-    
+
     public function down(): void {
-        Schema::dropIfExists('teams');
+        Schema::dropIfExists('user_roles');
     }
 };

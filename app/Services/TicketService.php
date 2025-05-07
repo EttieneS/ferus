@@ -2,16 +2,18 @@
 
 namespace App\Services;
 
+use App\DTOs\AssignUsersDTO;
 use App\Models\Ticket;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use App\Models\AssignedTicket;
 use App\DTOs\TicketViewDTO;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Throwable;
+use Illuminate\Support\Facades\Auth;
 
 use Exception;
 
@@ -88,20 +90,53 @@ class TicketService {
         }
     }
 
-    // public function getTicketsByQueue(int $queueId): LengthAwarePaginator {
+    public function assignUsers(AssignUsersDTO $data): array {
+        DB::enableQueryLog();
 
-    //     $tickets = Ticket::where('queue_id', $queueId)
-    //         ->with(['assignedTo', 'assignedBy', 'customer', 'queue'])
-    //         ->paginate(10);
+        Log::info('✅ assignUsers SERVICE START', [
+            'id' => $data->id,
+            'assigned_to' => $data->assignedTo,
+        ]);
 
-    //     return new LengthAwarePaginator(
-    //         TicketViewDTO::fromCollection($tickets->getCollection()),
-    //         $tickets->total(),
-    //         $tickets->perPage(),
-    //         $tickets->currentPage(),
-    //         ['path' => request()->url()]
-    //     );
-    // }
+        return DB::transaction(function () use ($data) {
+            $baseTicket = Ticket::findOrFail($data->id);
+            $results = [];
+
+            foreach ($data->assignedTo as $index => $userId) {
+                if ($index === 0) {
+                    // ✅ Update the base ticket
+                    Log::info('✏️ Updating base ticket ID ' . $baseTicket->id . ' to user ID ' . $userId);
+
+                    $baseTicket->assigned_to = $userId;
+                    $baseTicket->assigned_by = $data->assignedBy;
+                    $baseTicket->save();
+
+                    $results[] = $baseTicket->toArray();
+                } else {
+                    // ✅ Clone for additional users
+                    Log::info('🆕 Creating ticket for user ID ' . $userId);
+
+                    $new = Ticket::create([
+                        'incoming_mail_id' => $baseTicket->incoming_mail_id,
+                        'assigned_to' => $userId,
+                        'assigned_by' => $data->assignedBy,
+                        'queue_id' => $baseTicket->queue_id,
+                        'status' => $baseTicket->status,
+                        'priority' => $baseTicket->priority,
+                        'due_date' => $baseTicket->due_date,
+                    ]);
+
+                    $results[] = $new->toArray();
+                }
+            }
+
+            Log::info('Eloquent queries', DB::getQueryLog());
+
+            return $results;
+        });
+    }
+
+
 
     public function forwardTicketToQueue(Ticket $ticket) {
         try {
@@ -159,5 +194,23 @@ class TicketService {
             $tickets->currentPage(),
             ['path' => request()->url()]
         );
+    }
+
+    public function getPersonalTickets($userId): Collection {
+        $tickets = Ticket::where('assigned_to', $userId)
+            ->with(['incomingMail.customer', 'queue', 'assignedTo', 'assignedBy'])
+            ->get();
+
+        Log::debug('🎯 Personal tickets', ['userId' => $userId, 'count' => $tickets->count()]);
+
+        return $tickets;
+    }
+
+    public function updatePriority(int $ticketId, int $priority): Ticket {
+        $ticket = Ticket::findOrFail($ticketId);
+        $ticket->priority = $priority;
+        $ticket->save();
+
+        return $ticket;
     }
 }

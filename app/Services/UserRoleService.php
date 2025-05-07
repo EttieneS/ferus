@@ -1,13 +1,14 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Role;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
-class RoleService {
+class UserRoleService {
     public function createRole(array $data) {
-                
+
         return Role::create([
             'name' => $data['name'],
             'guard_name' => $data['guard_name']
@@ -15,10 +16,8 @@ class RoleService {
     }
 
     public function getAll() {
-        return DB::table('roles')            
+        return DB::table('user_roles')
             ->select('id', 'name')
             ->get();
     }
 }
-
-

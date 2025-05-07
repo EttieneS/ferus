@@ -6,14 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void {
-        Schema::table('queues', function (Blueprint $table) {
-            $table->string('mailer')->nullable()->after('name');
+        Schema::create('slas', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('name');
+            $table->integer('minutes');
+            $table->timestamps();
         });
     }
 
     public function down(): void {
-        Schema::table('queues', function (Blueprint $table) {
-            $table->dropColumn('mailer');
-        });
+        Schema::dropIfExists('slas');
     }
 };

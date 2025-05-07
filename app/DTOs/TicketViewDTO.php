@@ -13,16 +13,18 @@ class TicketViewDTO {
     public ?array $queue;
 
     public function __construct(Ticket $ticket) {
-        $this->ticket = $ticket->only([
-            'id',
-            'incoming_mail_id',
-            'queue_id',
-            'assigned_by',
-            'assigned_to',
-            'status',
-            'priority',
-            'split'
-        ]);
+        $this->ticket = [
+            'id' => $ticket->id,
+            'ref_number' => $ticket->ref_number,
+            'incoming_mail_id' => $ticket->incoming_mail_id,
+            'queue_id' => $ticket->queue_id,
+            'assigned_by' => $ticket->assigned_by,
+            'assigned_to' => $ticket->assigned_to,
+            'status' => $ticket->status,
+            'priority' => $ticket->priority,
+            'split' => $ticket->split,
+            'due_date' => $ticket->due_date,
+        ];
 
         $this->incomingMail = $ticket->incomingMail ? $ticket->incomingMail->only(['id', 'subject', 'body']) : null;
         $this->assignedTo = optional($ticket->assignedTo)?->only(['id', 'name', 'surname', 'email']);

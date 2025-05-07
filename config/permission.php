@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Queue;
+
 return [
 
     'models' => [
@@ -121,6 +123,8 @@ return [
      */
 
     'teams' => true,
+    'team_foreign_key' => 'queue_id',
+    'team_model' => App\Models\Queue::class,
 
     /*
      * Passport Client Credentials Grant

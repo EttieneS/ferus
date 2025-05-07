@@ -1,31 +1,61 @@
 <?php
 
 namespace App\Http\Controllers\API;
-   
+
 use Illuminate\Http\Request;
 use App\Http\Controllers\API\BaseController as BaseController;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Validator;
 use Illuminate\Http\JsonResponse;
-   
+use App\Services\AuthService;
+
 class AuthController extends BaseController {
-    
+
+    public function __construct(
+        private AuthService $authService
+    ) {
+    }
+
     public function login(Request $request): JsonResponse {
-        if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){ 
-            $user = Auth::user();
-            
-            $success['token'] = $user->createToken('semperadmeliora')->plainTextToken; 
-            $success['user'] = $user;
+        $credentials = $request->only('email', 'password');
 
-            // header('Content-Type', 'html');
-            // header('Access-Control-Allow-Origin', 'localhost:4200');
-            // header('Access-Control-Allow-Headers', 'Origin, Content-Type, Authorization');
+        if (!$token = auth('api')->attempt($credentials)) {
+            return $this->sendError('Unauthorised.', ['error' => 'Invalid credentials']);
+        }
 
-            return $this->sendResponse($success, 'User login successfully.');
-        } 
-        else { 
-            return $this->sendError('Unauthorised.', ['error'=>'Unauthorised']);
-        } 
+        // $guard = Auth::guard('api');
+
+        // if (!$token = $guard->attempt($credentials)) {
+        //     return $this->sendError('Unauthorised.', ['error' => 'Unauthorised']);
+        // }
+
+        // $user = $guard->user();
+
+        // return $this->sendResponse([
+        //     'token' => $token,
+        //     'user' => $user
+        // ], 'User login successfully.');
+
+        $user = auth('api')->user();
+
+        if (!$user) {
+            return $this->sendError('Unauthorised.', ['error' => 'User not found after login']);
+        }
+
+        return $this->sendResponse([
+            'token' => $token,
+            'user' => $user
+        ], 'User login successful.');
+    }
+
+    public function logout(): JsonResponse {
+        $guard = Auth::guard('api');
+
+        try {
+            $guard->logout();
+
+            return $this->sendResponse([], 'User logged out successfully.');
+        } catch (\Exception $e) {
+            return $this->sendError('Logout failed.', ['error' => $e->getMessage()]);
+        }
     }
 }

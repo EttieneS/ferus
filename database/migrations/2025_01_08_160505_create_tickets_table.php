@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void {
         Schema::create('tickets', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->bigIncrements('id')->unsigned();
             $table->bigInteger('incoming_mail_id')->unsigned();
             $table->bigInteger('queue_id')->unsigned();
             $table->bigInteger('assigned_by')->unsigned()->nullable();
@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->integer('status')->default(0);
             $table->integer('priority')->default(0);
             $table->boolean('split')->default(false);
+            $table->timestamp('due_date')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
