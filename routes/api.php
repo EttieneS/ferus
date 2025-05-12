@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\SlaController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\UserRoleController;
 use App\Http\Controllers\API\CustomerController;
@@ -60,6 +61,7 @@ Route::controller(TicketController::class)->group(function () {
 
 Route::controller(QueueController::class)->group(function () {
     Route::post('/queues/index', [QueueController::class, 'index']);
+    Route::post('/queues/create', [QueueController::class, 'store']);
 });
 
 Route::controller(IncomingMailController::class)->group(function () {
@@ -93,3 +95,5 @@ Route::post('/auth/refresh', function (): JsonResponse {
         ], 401);
     }
 });
+
+Route::get('/slas/index', [SlaController::class, 'index']);

@@ -6,18 +6,25 @@ use App\Models\Queue;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Crypt;
 
 class QueueService {
     public function getAllQueues(): Collection {
-        return Queue::all();
+        return Queue::with('sla')->get();
     }
 
     public function getQueueById(int $queueId): Queue {
         return Queue::findOrFail($queueId);
     }
 
-    public function createQueue(array $data): Queue {
-        return Queue::create($data);
+    public function createQueue(Queue $queue): void {
+        if ($queue->password) {
+            $queue->password = Crypt::encryptString($queue->password);
+        }
+
+        $result = $queue->save();
+
+        \Log::debug('Save result:', ['result' => $result]);
     }
 
     public function updateQueue(int $queueId, array $data): Queue {
