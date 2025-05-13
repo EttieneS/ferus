@@ -2,8 +2,19 @@
 
 namespace App\Services;
 
-use App\Models\Mail;
 use App\DTOs\MailViewDTO;
+use App\Models\Customer;
+use App\DTOs\OutgoingMailDTO;
+use App\Models\Mail;
+use App\Models\Ticket;
+use App\Models\OutgoingMail;
+use App\Models\User;
+use App\Models\Queue;
+use App\Mail\GenericMail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Mail\MailManager;
+use App\DTOs\MailDTO;
 
 class MailService {
     public function getByTicketId(int $ticketId): array {
@@ -27,7 +38,7 @@ class MailService {
                     ->values()
                     ->all();
 
-                $mailType = $mail->user_type ?? 0; // 0 = outgoing, 1 = incoming
+                $mailType = $mail->user_type ?? 0;
 
                 return new MailViewDTO(
                     mail: $mail,
@@ -38,5 +49,100 @@ class MailService {
                 );
             })
             ->toArray();
+    }
+
+    public function send(MailDTO $dto): array {
+        Log::info("send mail service ");
+        $ticket = Ticket::with('queue')->findOrFail($dto->mail->ticket_id);
+        $queue = $ticket->queue;
+
+        $mail = Mail::create([
+            'ticket_id' => $ticket->id,
+            'user_id' => $dto->userId ?? Auth::id(),
+            'user_type' => 0,
+            'subject' => $dto->mail->subject,
+            'body' => $dto->mail->body,
+        ]);
+
+        $recipients = collect(array_merge($dto->to, $dto->cc ?? []));
+        $sent = [];
+
+        foreach ($recipients as $recipient) {
+            $email = null;
+            $type = 'user';
+            $recipientId = null;
+
+            if (is_numeric($recipient)) {
+                $user = User::find($recipient);
+                if (!$user) {
+                    $customer = Customer::find($recipient);
+                    if ($customer) {
+                        $type = 'customer';
+                        $email = $customer->email;
+                        $recipientId = $customer->id;
+                    }
+                } else {
+                    $email = $user->email;
+                    $recipientId = $user->id;
+                }
+            } elseif (is_string($recipient)) {
+                $email = $recipient;
+                $customer = Customer::firstOrCreate(['email' => $email], ['full_name' => $email]);
+                $type = 'customer';
+                $recipientId = $customer->id;
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
+
+            $toEmail = app()->environment('local') ? 'smithettiene@yahoo.com' : $email;
+
+            try {
+                $mailer = app()->make(MailManager::class)->mailer(
+                    $this->createCustomMailer($queue)
+                );
+
+                $mailer->to($toEmail)->send(new GenericMail($dto->mail->subject, $dto->mail->body));
+
+                $sent[] = [
+                    'type' => $type,
+                    'email' => $email,
+                    'id' => $recipientId,
+                    'status' => 'sent',
+                    'sent_at' => now()->toDateTimeString()
+                ];
+            } catch (\Throwable $e) {
+                Log::error("❌ Failed to send mail to $email: " . $e->getMessage());
+                $sent[] = [
+                    'type' => $type,
+                    'email' => $email,
+                    'id' => $recipientId,
+                    'status' => 'failed',
+                    'sent_at' => null
+                ];
+            }
+        }
+
+        return $sent;
+    }
+
+    private function createCustomMailer(Queue $queue): string {
+        $customName = 'custom_' . $queue->id;
+
+        config([
+            "mail.mailers.$customName" => [
+                'transport' => 'smtp',
+                'host' => $queue->smtp_host,
+                'port' => $queue->smtp_port,
+                'encryption' => $queue->smtp_encryption,
+                'username' => $queue->smtp_username,
+                'password' => $queue->smtp_password,
+                'timeout' => null,
+                'auth_mode' => null,
+            ],
+            "mail.from.address" => $queue->from_address,
+            "mail.from.name" => $queue->from_name,
+        ]);
+
+        return $customName;
     }
 }

@@ -14,6 +14,7 @@ use App\Http\Controllers\API\OutgoingMailController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
+use App\Http\Controllers\API\MailController;
 
 Route::middleware(['auth:api'])->get('/me', function () {
     return response()->json([
@@ -73,6 +74,10 @@ Route::controller(OutgoingMailController::class)->group(function () {
     Route::post('/outgoing-mails/get-by-id', 'getByTicketId');
 
     Route::get('/outgoing-mails/test-send', 'testSend');
+});
+
+Route::controller(MailController::class)->group(function () {
+    Route::post('/mails/send', 'send');
 });
 
 Route::post('/auth/refresh', function (): JsonResponse {
