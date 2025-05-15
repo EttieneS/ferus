@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Mail\MailManager;
 use App\DTOs\MailDTO;
+use Crypt;
 
 class MailService {
     public function getByTicketId(int $ticketId): array {
@@ -58,8 +59,9 @@ class MailService {
 
         $mail = Mail::create([
             'ticket_id' => $ticket->id,
-            'user_id' => $dto->userId ?? Auth::id(),
+            'user_id' => $dto->userId ?? auth('api')->id(),
             'user_type' => 0,
+            'mail_type' => 0,
             'subject' => $dto->mail->subject,
             'body' => $dto->mail->body,
         ]);
@@ -131,15 +133,15 @@ class MailService {
         config([
             "mail.mailers.$customName" => [
                 'transport' => 'smtp',
-                'host' => $queue->smtp_host,
-                'port' => $queue->smtp_port,
-                'encryption' => $queue->smtp_encryption,
-                'username' => $queue->smtp_username,
-                'password' => $queue->smtp_password,
+                'host' => $queue->host,
+                'port' => $queue->port,
+                'encryption' => $queue->encryption,
+                'username' => $queue->username,
+                'password' => Crypt::decryptString($queue->password),
                 'timeout' => null,
                 'auth_mode' => null,
             ],
-            "mail.from.address" => $queue->from_address,
+            "mail.from.address" => $queue->from_email,
             "mail.from.name" => $queue->from_name,
         ]);
 

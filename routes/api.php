@@ -76,8 +76,8 @@ Route::controller(OutgoingMailController::class)->group(function () {
     Route::get('/outgoing-mails/test-send', 'testSend');
 });
 
-Route::controller(MailController::class)->group(function () {
-    Route::post('/mails/send', 'send');
+Route::middleware(['auth:api'])->group(function () {
+    Route::post('/mails/send', [MailController::class, 'send']);
 });
 
 Route::post('/auth/refresh', function (): JsonResponse {

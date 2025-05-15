@@ -24,7 +24,6 @@ class MailViewDTO {
         int $mailType
     ) {
         $this->id = $mail->id;
-        $this->ticketId = $mail->ticket_id;
         $this->subject = $mail->subject;
         $this->body = $mail->body;
         $this->from = $from;

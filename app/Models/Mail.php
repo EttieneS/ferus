@@ -9,9 +9,9 @@ class Mail extends Model {
     use SoftDeletes;
 
     protected $fillable = [
-        'ticket_id',
         'user_id',
-        'user_type',
+        'user_type', //0 user, 1 customer
+        'mail_type', //0 outgoing, 1 incoming
         'subject',
         'body',
     ];
