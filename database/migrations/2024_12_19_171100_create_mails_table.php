@@ -9,8 +9,9 @@ return new class extends Migration {
         Schema::create('mails', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_id');
-            $table->unsignedTinyInteger('user_type');
-            $table->unsignedTinyInteger('mail_type');
+            $table->unsignedTinyInteger('user_type'); // 0 = user, 1 = customer
+            $table->unsignedTinyInteger('mail_type'); // 0 = outgoing, 1 = incoming
+            $table->boolean('is_internal')->default(false); // true = internal only
             $table->string('subject');
             $table->longText('body');
             $table->timestamps();

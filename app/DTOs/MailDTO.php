@@ -5,21 +5,32 @@ namespace App\DTOs;
 use Illuminate\Http\Request;
 
 class MailDTO {
-    public object $mail;
-    public array $to;
-    public ?array $cc;
-    public ?int $userId;
+    public int $ticketId;
+    public ?int $fromUser = null;
+    public ?int $fromCustomer = null;
+
+    public array $toUsers = [];
+    public array $ccUsers = [];
+    public array $toCustomers = [];
+    public array $ccCustomers = [];
+
+    public string $subject;
+    public string $body;
 
     public static function fromRequest(Request $request): self {
-        $dto = new self();
-        $dto->mail = (object) [
-            'ticket_id' => $request->input('ticket_id'),
-            'subject' => $request->input('subject'),
-            'body' => $request->input('body'),
-        ];
-        $dto->to = $request->input('to', []);
-        $dto->cc = $request->input('cc', []);
-        $dto->userId = $request->input('user_id');
+        $dto = new self;
+
+        $dto->ticketId = $request->input('ticketId');
+        $dto->fromUser = $request->input('fromUser'); // optional
+        $dto->fromCustomer = $request->input('fromCustomer'); // optional
+
+        $dto->toUsers = $request->input('toUsers', []);
+        $dto->ccUsers = $request->input('ccUsers', []);
+        $dto->toCustomers = $request->input('toCustomers', []);
+        $dto->ccCustomers = $request->input('ccCustomers', []);
+
+        $dto->subject = $request->input('subject', '');
+        $dto->body = $request->input('body', '');
 
         return $dto;
     }
