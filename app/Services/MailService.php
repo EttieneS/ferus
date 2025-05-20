@@ -154,7 +154,7 @@ class MailService {
 
         foreach ($recipients as $recipient) {
             $email = null;
-            $type = 'user';
+            $type = 0; // assume user
             $recipientId = null;
 
             if (is_numeric($recipient)) {
@@ -162,7 +162,7 @@ class MailService {
                 if (!$user) {
                     $customer = Customer::find($recipient);
                     if ($customer) {
-                        $type = 'customer';
+                        $type = 1;
                         $email = $customer->email;
                         $recipientId = $customer->id;
                     }
@@ -170,50 +170,16 @@ class MailService {
                     $email = $user->email;
                     $recipientId = $user->id;
                 }
-            }
-
-            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
-
-            // Save mail recipient regardless of mail type
-            MailRecipient::create([
-                'mail_id' => $mail->id,
-                'recipient_id' => $recipientId,
-                'recipient_type' => $type,
-                'recipient_role' => in_array($recipient, $dto->ccUsers) || in_array($recipient, $dto->ccCustomers) ? 'cc' : 'to',
-            ]);
-
-            // Skip real email if internal-only
-            if ($mail->is_internal) continue;
-
-            $toEmail = app()->environment('local') ? 'smithettiene@yahoo.com' : $email;
-
-            try {
-                $mailer = app()->make(MailManager::class)->mailer(
-                    $this->createCustomMailer($queue)
+            } elseif (is_string($recipient)) {
+                $email = $recipient;
+                $customer = Customer::firstOrCreate(
+                    ['email' => $email],
+                    ['full_name' => $email]
                 );
-
-                $mailer->to($toEmail)->send(new GenericMail($dto->subject, $dto->body));
-
-                $sent[] = [
-                    'type' => $type,
-                    'email' => $email,
-                    'id' => $recipientId,
-                    'status' => 'sent',
-                    'sent_at' => now()->toDateTimeString()
-                ];
-            } catch (\Throwable $e) {
-                Log::error("❌ Failed to send mail to $email: " . $e->getMessage());
-                $sent[] = [
-                    'type' => $type,
-                    'email' => $email,
-                    'id' => $recipientId,
-                    'status' => 'failed',
-                    'sent_at' => null
-                ];
+                $type = 1;
+                $recipientId = $customer->id;
             }
         }
-
-        return $sent;
     }
 
 

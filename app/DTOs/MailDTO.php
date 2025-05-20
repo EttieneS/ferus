@@ -20,14 +20,14 @@ class MailDTO {
     public static function fromRequest(Request $request): self {
         $dto = new self;
 
-        $dto->ticketId = $request->input('ticketId');
-        $dto->fromUser = $request->input('fromUser'); // optional
-        $dto->fromCustomer = $request->input('fromCustomer'); // optional
+        $dto->ticketId = $request->input('ticket_id');
+        $dto->fromUser = $request->input('from_user');
+        $dto->fromCustomer = $request->input('from_customer');
 
-        $dto->toUsers = $request->input('toUsers', []);
-        $dto->ccUsers = $request->input('ccUsers', []);
-        $dto->toCustomers = $request->input('toCustomers', []);
-        $dto->ccCustomers = $request->input('ccCustomers', []);
+        $dto->toUsers = $request->input('to_users', []);
+        $dto->ccUsers = $request->input('cc_users', []);
+        $dto->toCustomers = $request->input('to_customers', []);
+        $dto->ccCustomers = $request->input('cc_customers', []);
 
         $dto->subject = $request->input('subject', '');
         $dto->body = $request->input('body', '');
