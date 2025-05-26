@@ -8,6 +8,7 @@ class MailDTO {
     public int $ticketId;
     public ?int $fromUser = null;
     public ?int $fromCustomer = null;
+    public ?int $sendType = null; //0 incoming, 1 outgoing
 
     public array $toUsers = [];
     public array $ccUsers = [];
@@ -16,6 +17,7 @@ class MailDTO {
 
     public string $subject;
     public string $body;
+    public ?int $inReplyTo;
 
     public static function fromRequest(Request $request): self {
         $dto = new self;
@@ -29,8 +31,10 @@ class MailDTO {
         $dto->toCustomers = $request->input('to_customers', []);
         $dto->ccCustomers = $request->input('cc_customers', []);
 
+        $dto->sendType = $request->input('send_type');
         $dto->subject = $request->input('subject', '');
         $dto->body = $request->input('body', '');
+        $dto->inReplyTo = $request->input('in_reply_to', '');
 
         return $dto;
     }

@@ -8,11 +8,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class MailRecipient extends Model {
     use SoftDeletes;
 
+    const RECIPIENT_TYPE_USER = 0;
+    const RECIPIENT_TYPE_CUSTOMER = 1;
+
+    const SEND_TYPE_TO = 0;
+    const SEND_TYPE_CC = 1;
+
     protected $fillable = [
         'mail_id',
         'recipient_id',
-        'recipient_type', // 0 = user, 1 = customer
-        'send_type', // 0 = to, 1 = cc
+        'recipient_type',
+        'send_type',
     ];
 
     public function mail() {

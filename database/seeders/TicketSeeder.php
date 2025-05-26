@@ -17,11 +17,13 @@ class TicketSeeder extends Seeder {
         foreach ($queues as $queue) {
             for ($i = 0; $i < 3; $i++) {
                 $mail = Mail::create([
-                    'user_id' => 1,
-                    'user_type' => 1,
+                    'sender_id' => 1,
+                    'sender_type' => Mail::CUSTOMER,
+                    'origin' => rand(0, 1),
                     'subject' => 'Mail subject ' . $i,
                     'body' => 'Generated body content ' . $i,
-                    'mail_type' => rand(0, 1), // 0 = outgoing, 1 = incoming
+                    'is_internal' => false,
+                    'in_reply_to' => null,
                 ]);
 
                 Ticket::create([

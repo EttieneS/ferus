@@ -28,8 +28,8 @@ class TicketViewDTO {
 
         $this->mailDTO = $ticket->mail_id ? $ticket->mail->only(['id', 'subject', 'body']) : null;
         $this->assignedTo = optional($ticket->assignedTo)?->only(['id', 'name', 'surname', 'email']);
-        $this->assignedBy = optional($ticket->assignedBy)?->only(['id', 'name', 'surname', 'email']);        
-        $this->customer = $ticket->mail?->customerSend?->only(['id', 'full_name', 'email']);
+        $this->assignedBy = optional($ticket->assignedBy)?->only(['id', 'name', 'surname', 'email']);
+        $this->customer = $ticket->mail?->customer?->only(['id', 'full_name', 'email']);
 
         $this->queue = $ticket->queue->only(['id', 'name']);
     }

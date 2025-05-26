@@ -8,16 +8,21 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('mails', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedTinyInteger('user_type'); // 0 = user, 1 = customer
-            $table->unsignedTinyInteger('mail_type'); // 0 = outgoing, 1 = incoming
-            $table->boolean('is_internal')->default(false); // true = internal only
+            $table->unsignedBigInteger('ticket_id')->nullable();
+            $table->unsignedBigInteger('sender_id');
+            $table->integer('sender_type');
+            $table->integer('origin');
             $table->string('subject');
             $table->longText('body');
+            $table->boolean('is_internal')->default(false);
+            $table->unsignedBigInteger('in_reply_to')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['user_id', 'user_type']);
+            $table->index(['sender_id', 'sender_type']);
+            $table->foreign('ticket_id')->references('id')->on('tickets')->onDelete('set null');
+            $table->foreign('in_reply_to')->references('id')->on('mails')->onDelete('set null');
         });
     }
 

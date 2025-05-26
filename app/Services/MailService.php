@@ -254,19 +254,18 @@ class MailService {
     //     return $sent;
     // }
     public function send(MailDTO $dto): array {
-        Log::info("send mail service");
+        Log::info("dto: " . $dto);
+
 
         $ticket = Ticket::with('queue')->findOrFail($dto->ticketId);
         $queue = $ticket->queue;
 
         $mail = Mail::create([
             'ticket_id' => $ticket->id,
-            'user_id' => $dto->fromUser ?? auth('api')->id(),
-            'user_type' => 0,
-            'mail_type' => 0,
+            'sender_id' => $dto->fromUser ?? auth('api')->id(),
             'subject' => $dto->subject,
             'body' => $dto->body,
-            'is_internal' => empty($dto->toCustomers) && empty($dto->ccCustomers),
+            'in_reply_to' => $dto->inReplyTo,
         ]);
 
         $sent = [];
@@ -291,35 +290,35 @@ class MailService {
         }
 
         // customer recipients
-        foreach (array_merge($dto->toCustomers, $dto->ccCustomers) as $entry) {
-            $email = is_string($entry) ? $entry : null;
-            $id = is_numeric($entry) ? $entry : null;
+        // foreach (array_merge($dto->toCustomers, $dto->ccCustomers) as $entry) {
+        //     $email = is_string($entry) ? $entry : null;
+        //     $id = is_numeric($entry) ? $entry : null;
 
-            if ($id) {
-                $customer = Customer::find($id);
-                if (!$customer || !filter_var($customer->email, FILTER_VALIDATE_EMAIL)) continue;
-                $email = $customer->email;
-            }
+        //     if ($id) {
+        //         $customer = Customer::find($id);
+        //         if (!$customer || !filter_var($customer->email, FILTER_VALIDATE_EMAIL)) continue;
+        //         $email = $customer->email;
+        //     }
 
-            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
+        //     if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
 
-            $role = in_array($entry, $dto->ccCustomers) ? 'cc' : 'to';
+        //     $role = in_array($entry, $dto->ccCustomers) ? 'cc' : 'to';
 
-            $customer = isset($customer)
-                ? $customer
-                : Customer::firstOrCreate(['email' => $email], ['full_name' => $email]);
+        //     $customer = isset($customer)
+        //         ? $customer
+        //         : Customer::firstOrCreate(['email' => $email], ['full_name' => $email]);
 
-            MailRecipient::create([
-                'mail_id' => $mail->id,
-                'recipient_id' => $customer->id,
-                'recipient_type' => 1,
-                'recipient_role' => $role,
-            ]);
+        //     MailRecipient::create([
+        //         'mail_id' => $mail->id,
+        //         'recipient_id' => $customer->id,
+        //         'recipient_type' => 1, // 0 = user, 1 = customer                
+        //         'send_type' => $dto->sendType, // 0 = to, 1 = cc
+        //     ]);
 
-            if (!$mail->is_internal) {
-                $this->sendMailTo($queue, $email, $dto->subject, $dto->body, $sent, 1, $customer->id);
-            }
-        }
+        //     if (!$mail->is_internal) {
+        //         $this->sendMailTo($queue, $email, $dto->subject, $dto->body, $sent, 1, $customer->id);
+        //     }
+        // }
 
         return $sent;
     }

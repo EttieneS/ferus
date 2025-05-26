@@ -34,6 +34,7 @@ class TicketService {
                     'priority' => $data['priority'] ?? 0,
                 ]);
             }
+            Log::info($assignedTickets);
             return $assignedTickets;
         });
     }
