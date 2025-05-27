@@ -14,8 +14,7 @@ class DatabaseSeeder extends Seeder {
             UserSeeder::class,
             UserRoleSeeder::class,
             CustomerSeeder::class,
-            TicketSeeder::class,
-            MailRecipientSeeder::class,
+            TicketSeeder::class,            
         ]);
     }
 }

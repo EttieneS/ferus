@@ -4,10 +4,12 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Mail;
+use App\Models\MailBody;
 use App\Models\Ticket;
 use App\Models\Queue;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class TicketSeeder extends Seeder {
     public function run(): void {
@@ -16,14 +18,23 @@ class TicketSeeder extends Seeder {
 
         foreach ($queues as $queue) {
             for ($i = 0; $i < 3; $i++) {
+                $subject = Str::title(fake()->words(rand(3, 6), true));
+                $bodyText = fake()->paragraphs(rand(2, 4), true);
+
                 $mail = Mail::create([
                     'sender_id' => 1,
                     'sender_type' => Mail::CUSTOMER,
-                    'origin' => rand(0, 1),
-                    'subject' => 'Mail subject ' . $i,
-                    'body' => 'Generated body content ' . $i,
+                    'to_users' => null,
+                    'cc_users' => null,
+                    'to_customers' => null,
+                    'cc_customers' => null,                                        
                     'is_internal' => false,
                     'in_reply_to' => null,
+                ]);
+
+                MailBody::create([
+                    'mail_id' => $mail->id,
+                    'body' => "Subject: $subject\n\n$bodyText"
                 ]);
 
                 Ticket::create([

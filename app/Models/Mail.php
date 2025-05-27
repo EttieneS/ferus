@@ -12,32 +12,38 @@ class Mail extends Model {
     const USER = 0;
     const CUSTOMER = 1;
 
-    // origin
-    const INTERNAL = 0;
-    const EXTERNAL = 1;
-
     protected $fillable = [
+        'ticket_id',
         'sender_id',
-        'sender_type',
-        'origin',
-        'subject',
-        'body',
-        'in_reply_to',
+        'sender_id',
+        'to_users',
+        'cc_users',
+        'to_customers',
+        'cc_customers',
+        'is_internal',
     ];
 
-    public function recipients() {
-        return $this->hasMany(MailRecipient::class);
-    }
+     protected $casts = [
+        'to_users' => 'array',
+        'cc_users' => 'array',
+        'to_customers' => 'array',
+        'cc_customers' => 'array',
+        'is_internal' => 'boolean'
+    ];
 
-    public function ticket() {
+     public function ticket() {
         return $this->belongsTo(Ticket::class);
     }
 
     public function user() {
-        return $this->belongsTo(User::class, 'sender_id');
+        return $this->belongsTo(User::class, 'sender_id')->where('sender_type', self::USER);
     }
 
     public function customer() {
-        return $this->belongsTo(Customer::class, 'sender_id');
+        return $this->belongsTo(Customer::class, 'sender_id')->where('sender_type', self::CUSTOMER);
+    }
+
+    public function body() {
+        return $this->hasOne(MailBody::class);
     }
 }

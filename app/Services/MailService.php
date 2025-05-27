@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Mail\MailManager;
 use App\DTOs\MailDTO;
+use App\Models\MailBody;
 use Crypt;
 use App\Models\MailMeta;
 
@@ -257,19 +258,22 @@ class MailService {
     public function send(MailDTO $dto): array {
         $ticket = Ticket::with('queue')->findOrFail($dto->ticketId);
         $queue = $ticket->queue;
-
+                
         $mail = Mail::create([
             'ticket_id' => $ticket->id,
             'sender_id' => $dto->fromUser ?? auth('api')->id(),
-            'subject' => $dto->subject,
-            'body' => $dto->body,
-            'in_reply_to' => $dto->inReplyTo,
-            'is_internal' => empty($dto->toCustomers) && empty($dto->ccCustomers) && empty($dto->ccUsers),
+            'sender_type' => Mail::USER,
+            'toUsers' => $dto->toUsers, //jsone array([1 send::true], [2, send::false, )
+            'ccUsers' => $dto->ccUsers,
+            'toCustomers' => $dto->toCustomers,
+            'ccCustomers' => $dto->ccCustomers,                              
         ]);
 
+        $mailBody = MailBody::fromMailDTO($dto);
+        $mailBody->id = $mail->id;
+        MailBody::create($mailBody);
+        
         $sent = [];
-
-        // Resolve ccCustomer wildcard emails into customer IDs
         $resolvedCcCustomerIds = [];
         foreach ($dto->ccCustomers as $email) {
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
@@ -299,25 +303,23 @@ class MailService {
         }
 
         // Send toCustomers (known IDs)
-        foreach ($dto->toCustomers as $customerId) {
-            $customer = Customer::find($customerId);
-            if (!$customer || !filter_var($customer->email, FILTER_VALIDATE_EMAIL)) continue;
-
-            if (!$mail->is_internal) {
-                $this->sendMailTo($queue, $customer->email, $dto->subject, $dto->body, $sent, MailMeta::RECIPIENT_TYPE_CUSTOMER, $customer->id);
+        foreach ($dto->toCustomers as $customerInput) {            
+            if (is_numeric($customerInput)) {
+                $customer = Customer::find($customerInput);
+                if (!$customer || !filter_var($customer->email, FILTER_VALIDATE_EMAIL)) continue;
+            } else {
+                if (!filter_var($customerInput, FILTER_VALIDATE_EMAIL)) continue;
+                $customer = Customer::where('email', $customerInput)->first();
+                if (!$customer) {
+                    $customer = Customer::create(['email' => $customerInput]);
+                }
             }
+
+            
+            $this->sendMailTo($queue, $customer->email, $dto->subject, $dto->body, $sent, Mail::CUSTOMER, $customer->id);
+            
         }
-
-        // Save MailMeta with final resolved arrays
-        MailMeta::create([
-            'mail_id' => $mail->id,
-            'in_reply_to' => $dto->inReplyTo,
-            'toUsers' => $dto->toUsers,
-            'ccUsers' => $dto->ccUsers,
-            'toCustomers' => $dto->toCustomers,
-            'ccCustomers' => $resolvedCcCustomerIds,
-        ]);
-
+        
         return $sent;
     }
 

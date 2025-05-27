@@ -7,6 +7,7 @@ use App\Http\Controllers\API\BaseController as BaseController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use App\Services\AuthService;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends BaseController {
 
@@ -17,7 +18,8 @@ class AuthController extends BaseController {
 
     public function login(Request $request): JsonResponse {
         $credentials = $request->only('email', 'password');
-
+        Log::info("Login");
+        
         if (!$token = auth('api')->attempt($credentials)) {
             return $this->sendError('Unauthorised.', ['error' => 'Invalid credentials']);
         }
