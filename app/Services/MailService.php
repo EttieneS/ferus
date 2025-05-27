@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Mail\MailManager;
 use App\DTOs\MailDTO;
 use Crypt;
-use App\Models\MailRecipient;
+use App\Models\MailMeta;
 
 class MailService {
     public function getByTicketId(int $ticketId): array {
@@ -253,10 +253,8 @@ class MailService {
 
     //     return $sent;
     // }
+
     public function send(MailDTO $dto): array {
-        Log::info("dto: " . $dto);
-
-
         $ticket = Ticket::with('queue')->findOrFail($dto->ticketId);
         $queue = $ticket->queue;
 
@@ -266,62 +264,63 @@ class MailService {
             'subject' => $dto->subject,
             'body' => $dto->body,
             'in_reply_to' => $dto->inReplyTo,
+            'is_internal' => empty($dto->toCustomers) && empty($dto->ccCustomers) && empty($dto->ccUsers),
         ]);
 
         $sent = [];
 
-        // user recipients
+        // Resolve ccCustomer wildcard emails into customer IDs
+        $resolvedCcCustomerIds = [];
+        foreach ($dto->ccCustomers as $email) {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
+
+            $customer = Customer::firstOrCreate(
+                ['email' => $email],
+                ['full_name' => $email]
+            );
+
+            if ($customer) {
+                $resolvedCcCustomerIds[] = $customer->id;
+
+                if (!$mail->is_internal) {
+                    $this->sendMailTo($queue, $customer->email, $dto->subject, $dto->body, $sent, MailMeta::RECIPIENT_TYPE_CUSTOMER, $customer->id);
+                }
+            }
+        }
+
+        // Send toUsers and ccUsers if external
         foreach (array_merge($dto->toUsers, $dto->ccUsers) as $userId) {
             $user = User::find($userId);
             if (!$user || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) continue;
 
-            $role = in_array($userId, $dto->ccUsers) ? 'cc' : 'to';
-
-            MailRecipient::create([
-                'mail_id' => $mail->id,
-                'recipient_id' => $user->id,
-                'recipient_type' => 0,
-                'recipient_role' => $role,
-            ]);
-
             if (!$mail->is_internal) {
-                $this->sendMailTo($queue, $user->email, $dto->subject, $dto->body, $sent, 0, $user->id);
+                $this->sendMailTo($queue, $user->email, $dto->subject, $dto->body, $sent, MailMeta::RECIPIENT_TYPE_USER, $user->id);
             }
         }
 
-        // customer recipients
-        // foreach (array_merge($dto->toCustomers, $dto->ccCustomers) as $entry) {
-        //     $email = is_string($entry) ? $entry : null;
-        //     $id = is_numeric($entry) ? $entry : null;
+        // Send toCustomers (known IDs)
+        foreach ($dto->toCustomers as $customerId) {
+            $customer = Customer::find($customerId);
+            if (!$customer || !filter_var($customer->email, FILTER_VALIDATE_EMAIL)) continue;
 
-        //     if ($id) {
-        //         $customer = Customer::find($id);
-        //         if (!$customer || !filter_var($customer->email, FILTER_VALIDATE_EMAIL)) continue;
-        //         $email = $customer->email;
-        //     }
+            if (!$mail->is_internal) {
+                $this->sendMailTo($queue, $customer->email, $dto->subject, $dto->body, $sent, MailMeta::RECIPIENT_TYPE_CUSTOMER, $customer->id);
+            }
+        }
 
-        //     if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) continue;
-
-        //     $role = in_array($entry, $dto->ccCustomers) ? 'cc' : 'to';
-
-        //     $customer = isset($customer)
-        //         ? $customer
-        //         : Customer::firstOrCreate(['email' => $email], ['full_name' => $email]);
-
-        //     MailRecipient::create([
-        //         'mail_id' => $mail->id,
-        //         'recipient_id' => $customer->id,
-        //         'recipient_type' => 1, // 0 = user, 1 = customer                
-        //         'send_type' => $dto->sendType, // 0 = to, 1 = cc
-        //     ]);
-
-        //     if (!$mail->is_internal) {
-        //         $this->sendMailTo($queue, $email, $dto->subject, $dto->body, $sent, 1, $customer->id);
-        //     }
-        // }
+        // Save MailMeta with final resolved arrays
+        MailMeta::create([
+            'mail_id' => $mail->id,
+            'in_reply_to' => $dto->inReplyTo,
+            'toUsers' => $dto->toUsers,
+            'ccUsers' => $dto->ccUsers,
+            'toCustomers' => $dto->toCustomers,
+            'ccCustomers' => $resolvedCcCustomerIds,
+        ]);
 
         return $sent;
     }
+
 
     private function sendMailTo(Queue $queue, string $email, string $subject, string $body, array &$sent, int $type, int $id): void {
         $toEmail = app()->environment('local') ? 'smithettiene@yahoo.com' : $email;
@@ -352,8 +351,6 @@ class MailService {
             ];
         }
     }
-
-
 
     private function createCustomMailer(Queue $queue): string {
         $customName = 'custom_' . $queue->id;

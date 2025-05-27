@@ -17,7 +17,7 @@ class MailController extends BaseController {
 
     public function send(Request $request) {
         Log::info("mail controller");
-        Log::info($request . " :request");
+        Log::info(json_encode($request) . " :request");
         $dto = MailDTO::fromRequest($request);
         $result = $this->mailService->send($dto);
 
