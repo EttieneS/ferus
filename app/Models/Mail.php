@@ -8,14 +8,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Mail extends Model {
     use SoftDeletes;
 
-    // user_type
     const USER = 0;
     const CUSTOMER = 1;
 
     protected $fillable = [
         'ticket_id',
         'sender_id',
-        'sender_id',
+        'sender_type',
         'to_users',
         'cc_users',
         'to_customers',
@@ -23,7 +22,7 @@ class Mail extends Model {
         'is_internal',
     ];
 
-     protected $casts = [
+    protected $casts = [
         'to_users' => 'array',
         'cc_users' => 'array',
         'to_customers' => 'array',
@@ -31,7 +30,7 @@ class Mail extends Model {
         'is_internal' => 'boolean'
     ];
 
-     public function ticket() {
+    public function ticket() {
         return $this->belongsTo(Ticket::class);
     }
 
