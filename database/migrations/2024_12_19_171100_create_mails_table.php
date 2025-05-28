@@ -9,12 +9,11 @@ return new class extends Migration {
         Schema::create('mails', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('sender_id');
-            $table->tinyInteger('sender_type');            
+            $table->tinyInteger('sender_type');       
             $table->json('to_users')->nullable();
             $table->json('cc_users')->nullable();
             $table->json('to_customers')->nullable();
-            $table->json('cc_customers')->nullable();
-            $table->boolean('is_internal')->default(false);
+            $table->json('cc_customers')->nullable();            
             $table->unsignedBigInteger('in_reply_to')->nullable();
 
             $table->timestamps();

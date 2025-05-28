@@ -35,14 +35,14 @@ class Mail extends Model {
     }
 
     public function user() {
-        return $this->belongsTo(User::class, 'sender_id')->where('sender_type', self::USER);
+        return $this->belongsTo(User::class, 'sender_id');
     }
 
     public function customer() {
-        return $this->belongsTo(Customer::class, 'sender_id')->where('sender_type', self::CUSTOMER);
+        return $this->belongsTo(Customer::class, 'sender_id');
     }
 
-    public function body() {
+    public function mailBody() {
         return $this->hasOne(MailBody::class);
     }
 }

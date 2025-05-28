@@ -16,7 +16,7 @@ class MailBody extends Model {
         return $this->belongsTo(Mail::class);
     }
 
-    public function fromMailDTO(MailDTO $dto): self {
+    public static function fromMailDTO(MailDTO $dto): self {
         $body = new self;
 
         $body->subject = $dto->subject;

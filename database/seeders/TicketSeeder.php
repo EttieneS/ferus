@@ -27,14 +27,14 @@ class TicketSeeder extends Seeder {
                     'to_users' => null,
                     'cc_users' => null,
                     'to_customers' => null,
-                    'cc_customers' => null,                                        
-                    'is_internal' => false,
+                    'cc_customers' => null,                    
                     'in_reply_to' => null,
                 ]);
 
                 MailBody::create([
                     'mail_id' => $mail->id,
-                    'body' => "Subject: $subject\n\n$bodyText"
+                    'subject' => $subject,
+                    'body' => "Subject: \n\n$bodyText"
                 ]);
 
                 Ticket::create([

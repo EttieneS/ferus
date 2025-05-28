@@ -4,11 +4,12 @@ namespace App\DTOs;
 
 use Illuminate\Http\Request;
 
-class MailDTO {
+class MailDTO {    
     public int $ticketId;
-    public ?int $fromUser = null;
-    public ?int $fromCustomer = null;
-    public ?int $sendType = null;
+    public int $mailId;
+    public ?int $senderId = null;    
+    public ?int $senderType = null;
+
     public ?int $queue = null;
 
     public array $toUsers = [];
@@ -23,16 +24,16 @@ class MailDTO {
     public static function fromRequest(Request $request): self {
         $dto = new self;
 
-        $dto->ticketId = $request->input('ticket_id');
-        $dto->fromUser = $request->input('from_user');
-        $dto->fromCustomer = $request->input('from_customer');
+        $dto->mailId = $request->input('mail_id');
+        $dto->ticketId = $request->input('ticket_id');        
+        $dto->senderId = $request->input('sender_id');
+        $dto->senderType = $request->input['sender_type'];
 
         $dto->toUsers = $request->input('to_users', []);
         $dto->ccUsers = $request->input('cc_users', []);
         $dto->toCustomers = $request->input('to_customers', []);
         $dto->ccCustomers = $request->input('cc_customers', []);
-
-        $dto->sendType = $request->input('send_type');
+        
         $dto->subject = $request->input('subject', '');
         $dto->body = $request->input('body', '');
         $dto->inReplyTo = $request->input('in_reply_to', '');

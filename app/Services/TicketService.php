@@ -45,22 +45,33 @@ class TicketService {
     // }
 
     public function getAllTickets(): LengthAwarePaginator {
-
-        $tickets = Ticket::with(['mail', 'assignedTo', 'assignedBy', 'queue'])
-            ->paginate($this->paginationLimit);
-        Log::info($tickets . " tickets");
-        $transformedTickets = TicketViewDTO::fromCollection($tickets);
-
-        return new LengthAwarePaginator(
-            $transformedTickets,
-            $tickets->total(),
-            $tickets->perPage(),
-            $tickets->currentPage(),
-            [
-                'path' => request()->url(),
-                'query' => request()->query(),
-            ]
-        );
+        try {
+            $tickets = Ticket::with([
+                'mail.customer', 
+                'mail',
+                'mail.mailBody',
+                'assignedTo',
+                'assignedBy',
+                'queue'
+                ])->paginate($this->paginationLimit);
+            Log::info($tickets . " tickets");
+            $transformedTickets = TicketViewDTO::fromCollection($tickets);
+    
+            return new LengthAwarePaginator(
+                $transformedTickets,
+                $tickets->total(),
+                $tickets->perPage(),
+                $tickets->currentPage(),
+                [
+                    'path' => request()->url(),
+                    'query' => request()->query(),
+                ]
+            );
+        } catch(Throwable $e) {
+            Log::error('Error fetching tickets: ' . $e->getMessage());                                                            
+            // Optionally rethrow or return empty paginator
+            throw $e;
+        }
     }
 
     public function assignUser(Ticket $ticket): JsonResponse {

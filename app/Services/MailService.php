@@ -18,6 +18,7 @@ use App\DTOs\MailDTO;
 use App\Models\MailBody;
 use Crypt;
 use App\Models\MailMeta;
+use PHPUnit\Event\Code\Throwable;
 
 class MailService {
     public function getByTicketId(int $ticketId): array {
@@ -256,24 +257,11 @@ class MailService {
     // }
 
     public function send(MailDTO $dto): array {
-
+        Log::info(json_encode($dto) . " dto mailservice");
         $ticket = Ticket::with('queue')->findOrFail($dto->ticketId);
         $queue = $ticket->queue;
-
-        $mail = Mail::create([
-            'ticket_id' => $ticket->id,
-            'sender_id' => $dto->fromUser ?? auth('api')->id(),
-            'sender_type' => Mail::USER,
-            'toUsers' => $dto->toUsers, //json array([1 send::true], [2, send::false, )
-            'ccUsers' => $dto->ccUsers,
-            'toCustomers' => $dto->toCustomers,
-            'ccCustomers' => $dto->ccCustomers,
-        ]);
-
-        $mailBody = MailBody::fromMailDTO($dto);
-        $mailBody->id = $mail->id;
-        MailBody::create($mailBody);
-
+        $sent = array();
+        
         $sent = [];
         $resolvedCcCustomerIds = [];
         foreach ($dto->ccCustomers as $email) {
@@ -286,14 +274,11 @@ class MailService {
 
             if ($customer) {
                 $resolvedCcCustomerIds[] = $customer->id;
-
-                if (!$mail->is_internal) {
-                    $this->sendMailTo($queue, $customer->email, $dto->subject, $dto->body, $sent, MailMeta::RECIPIENT_TYPE_CUSTOMER, $customer->id);
-                }
+           
+                $this->sendMailTo($queue, $customer->email, $dto->subject, $dto->body, $sent, MailMeta::RECIPIENT_TYPE_CUSTOMER, $customer->id);           
             }
         }
-
-        // Send toCustomers (known IDs)
+        
         foreach ($dto->toCustomers as $customerInput) {
             if (is_numeric($customerInput)) {
                 $customer = Customer::find($customerInput);
@@ -305,50 +290,77 @@ class MailService {
                     $customer = Customer::create(['email' => $customerInput]);
                 }
             }
+            $toCustomerIds[] = $customer->id;
 
+            $this->sendMailTo($queue, $customer->email, $dto->subject, $dto->body, $sent);
+        }
+
+        foreach ($dto->ccCustomers as $customerInput) {
+            if (is_numeric($customerInput)) {
+                $customer = Customer::find($customerInput);
+            } else {
+                if (!filter_var($customerInput, FILTER_VALIDATE_EMAIL)) continue;
+                $customer = Customer::firstOrCreate(['email' => $customerInput]);
+            }
+
+            if (!$customer || !filter_var($customer->email, FILTER_VALIDATE_EMAIL)) continue;
+
+            $ccCustomerIds[] = $customer->id;
 
             $this->sendMailTo($queue, $customer->email, $dto->subject, $dto->body, $sent, Mail::CUSTOMER, $customer->id);
         }
+
+        $mail = Mail::create([            
+            'sender_id' => $dto->fromUser ?? auth('api')->id(),
+            'sender_type' => Mail::USER,
+            'to_users' => $dto->toUsers, //json array([1 send::true], [2, send::false, )
+            'cc_users' => $dto->ccUsers,
+            'to_customers' => $toCustomerIds,
+            'cc_customers' => $ccCustomerIds,
+            ''
+        ]);
+        
+        $mailBody = MailBody::fromMailDTO($dto);
+        $mailBody->mail_id = $mail->id;
+        $mailBody->save();
 
         return $sent;
     }
 
 
-    private function sendMailTo(Queue $queue, string $email, string $subject, string $body, array &$sent, int $type, int $id): void {
+    private function sendMailTo(Queue $queue, string $email, string $subject, string $body, array &$sent): void {
         $toEmail = app()->environment('local') ? 'smithettiene@yahoo.com' : $email;
 
         try {
             $mailer = app()->make(MailManager::class)->mailer(
-                $this->createCustomMailer($queue)
+                $customName = $this->createCustomMailer($queue)
             );
 
             $mailer->to($toEmail)->send(new GenericMail($subject, $body));
+            Log::info("✅ Sent mail to $toEmail using mailer [$customName]");
 
-            $sent[] = [
-                'type' => $type,
-                'email' => $email,
-                'id' => $id,
+            $sent[] = [                
+                'email' => $email,                
                 'status' => 'sent',
                 'sent_at' => now()->toDateTimeString()
             ];
         } catch (\Throwable $e) {
             Log::error("❌ Failed to send mail to $email: " . $e->getMessage());
 
-            $sent[] = [
-                'type' => $type,
-                'email' => $email,
-                'id' => $id,
+            $sent[] = [                
+                'email' => $email,                
                 'status' => 'failed',
-                'sent_at' => null
+                'failed_at' => now()->toDateTimeString()
             ];
         }
     }
 
     private function createCustomMailer(Queue $queue): string {
         $customName = 'custom_' . $queue->id;
+        Log::info(json_encode($queue) . " used queue");
 
         config([
-            "mail.mailers.$customName" => [
+            "mail.mailers.$queue->mailer" => [
                 'transport' => 'smtp',
                 'host' => $queue->host,
                 'port' => $queue->port,
