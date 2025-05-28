@@ -256,23 +256,24 @@ class MailService {
     // }
 
     public function send(MailDTO $dto): array {
+
         $ticket = Ticket::with('queue')->findOrFail($dto->ticketId);
         $queue = $ticket->queue;
-                
+
         $mail = Mail::create([
             'ticket_id' => $ticket->id,
             'sender_id' => $dto->fromUser ?? auth('api')->id(),
             'sender_type' => Mail::USER,
-            'toUsers' => $dto->toUsers, //jsone array([1 send::true], [2, send::false, )
+            'toUsers' => $dto->toUsers, //json array([1 send::true], [2, send::false, )
             'ccUsers' => $dto->ccUsers,
             'toCustomers' => $dto->toCustomers,
-            'ccCustomers' => $dto->ccCustomers,                              
+            'ccCustomers' => $dto->ccCustomers,
         ]);
 
         $mailBody = MailBody::fromMailDTO($dto);
         $mailBody->id = $mail->id;
         MailBody::create($mailBody);
-        
+
         $sent = [];
         $resolvedCcCustomerIds = [];
         foreach ($dto->ccCustomers as $email) {
@@ -292,18 +293,8 @@ class MailService {
             }
         }
 
-        // Send toUsers and ccUsers if external
-        foreach (array_merge($dto->toUsers, $dto->ccUsers) as $userId) {
-            $user = User::find($userId);
-            if (!$user || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) continue;
-
-            if (!$mail->is_internal) {
-                $this->sendMailTo($queue, $user->email, $dto->subject, $dto->body, $sent, MailMeta::RECIPIENT_TYPE_USER, $user->id);
-            }
-        }
-
         // Send toCustomers (known IDs)
-        foreach ($dto->toCustomers as $customerInput) {            
+        foreach ($dto->toCustomers as $customerInput) {
             if (is_numeric($customerInput)) {
                 $customer = Customer::find($customerInput);
                 if (!$customer || !filter_var($customer->email, FILTER_VALIDATE_EMAIL)) continue;
@@ -315,11 +306,10 @@ class MailService {
                 }
             }
 
-            
+
             $this->sendMailTo($queue, $customer->email, $dto->subject, $dto->body, $sent, Mail::CUSTOMER, $customer->id);
-            
         }
-        
+
         return $sent;
     }
 

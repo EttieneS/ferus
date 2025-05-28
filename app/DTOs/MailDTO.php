@@ -4,11 +4,12 @@ namespace App\DTOs;
 
 use Illuminate\Http\Request;
 
-class MailDTO {    
+class MailDTO {
     public int $ticketId;
     public ?int $fromUser = null;
     public ?int $fromCustomer = null;
     public ?int $sendType = null;
+    public ?int $queue = null;
 
     public array $toUsers = [];
     public array $ccUsers = [];

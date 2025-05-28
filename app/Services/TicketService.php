@@ -45,9 +45,10 @@ class TicketService {
     // }
 
     public function getAllTickets(): LengthAwarePaginator {
+
         $tickets = Ticket::with(['mail', 'assignedTo', 'assignedBy', 'queue'])
             ->paginate($this->paginationLimit);
-
+        Log::info($tickets . " tickets");
         $transformedTickets = TicketViewDTO::fromCollection($tickets);
 
         return new LengthAwarePaginator(
