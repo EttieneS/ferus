@@ -24,8 +24,20 @@ class MailController extends BaseController {
         return $this->sendResponse($result, 'Mail sent successfully.');
     }
 
-    public function getByTicketId(int $ticketId) {
-        $replies = $this->mailService->getByTicketId($ticketId);
+    public function getByTicketId(Request $request) {
+        Log::info('request get ticket by id mailctrl: ' . json_encode($request));
+
+        $mailId = $request['mail_id'];
+        $replies = $this->mailService->getByTicketId($mailId);
+
+        return $this->sendResponse($replies, 'Mail fetched successfully.');
+    }
+    
+    public function getReplies(Request $request) {
+        Log::info('request get ticket by id mailctrl: ' . json_encode($request));
+
+        $mailId = $request['mail_id'];
+        $replies = $this->mailService->getByTicketId($mailId);
 
         return $this->sendResponse($replies, 'Mail fetched successfully.');
     }

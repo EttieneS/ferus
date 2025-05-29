@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Illuminate\Support\Collection;
 class Mail extends Model {
     use SoftDeletes;
 
@@ -19,7 +19,7 @@ class Mail extends Model {
         'cc_users',
         'to_customers',
         'cc_customers',
-        'is_internal',
+        'in_reply_to',
     ];
 
     protected $casts = [
@@ -27,22 +27,42 @@ class Mail extends Model {
         'cc_users' => 'array',
         'to_customers' => 'array',
         'cc_customers' => 'array',
-        'is_internal' => 'boolean'
+        'in_reply_to' => 'int'
     ];
 
     public function ticket() {
-        return $this->belongsTo(Ticket::class);
+        return $this->belongsTo(Ticket::class, 'ticket_id');
     }
 
-    public function user() {
-        return $this->belongsTo(User::class, 'sender_id');
-    }
-
-    public function customer() {
-        return $this->belongsTo(Customer::class, 'sender_id');
-    }
+    public function getSenderDetails(): User|Customer|null {
+        return match ($this->sender_type) {
+            self::USER => User::find($this->sender_id),
+            self::CUSTOMER => Customer::find($this->sender_id),
+            default => null,
+        };
+    }   
 
     public function mailBody() {
         return $this->hasOne(MailBody::class);
+    }
+
+    public function ccUsers(): Collection {
+        return User::whereIn('id', $this->cc_users ?? [])->get();
+    }
+
+    public function toUsers(): Collection {
+        return User::whereIn('id', $this->to_users ?? [])->get();
+    }
+
+    public function ccCustomers(): Collection {
+        return Customer::whereIn('id', $this->cc_customers ?? [])->get();
+    }
+    
+    public function toCustomers(): Collection {
+        return Customer::whereIn('id', $this->to_customers ?? [])->get();
+    }
+
+    public function inReplyTo(): Collection {
+        return Mail::where('in_reply_to', $this->id)->get();
     }
 }

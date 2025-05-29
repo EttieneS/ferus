@@ -6,10 +6,9 @@ use App\Models\Ticket;
 
 class TicketViewDTO {
     public array $ticket;
-    public array $mailDTO;
+    public array $mailViewDTO;
     public ?array $assignedTo;
-    public ?array $assignedBy;
-    public ?array $customer;
+    public ?array $assignedBy;    
     public ?array $queue;
 
     public function __construct(Ticket $ticket) {
@@ -25,19 +24,12 @@ class TicketViewDTO {
             'split' => $ticket->split,
             'due_date' => $ticket->due_date,
         ];
-
-        $this->mailDTO = $ticket->mail?->mailBody
-            ? [
-                'id' => $ticket->mail->id,
-                'subject' => $ticket->mail->mailBody->subject,
-                'body' => $ticket->mail->mailBody->body,
-            ]
-            : null;
+        
+        $this->mailViewDTO = [new MailViewDTO($ticket->mail)];
         
         $this->assignedTo = optional($ticket->assignedTo)?->only(['id', 'name', 'surname', 'email']);
         $this->assignedBy = optional($ticket->assignedBy)?->only(['id', 'name', 'surname', 'email']);
-        $this->customer = $ticket->mail?->customer?->only(['id', 'full_name', 'email']);
-
+    
         $this->queue = $ticket->queue->only(['id', 'name']);
     }
 

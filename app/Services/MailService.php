@@ -22,37 +22,26 @@ use PHPUnit\Event\Code\Throwable;
 
 class MailService {
     public function getByTicketId(int $ticketId): array {
-        return Mail::where('ticket_id', $ticketId)
-            ->with(['recipients', 'senderUser', 'senderCustomer'])
+        $ticket = Ticket::with('mail')->findOrFail($ticketId);
+        $rootMail = $ticket->mail;
+
+        if (!$rootMail) {
+            return [];
+        }
+
+        $replies = Mail::where('in_reply_to', $ticketId)
             ->orderBy('created_at')
-            ->get()
-            ->map(function ($mail) {
-                $fromModel = $mail->senderUser ?? $mail->senderCustomer;
-                $from = $fromModel?->email ?? 'unknown';
+            ->get();
+        
+        return $replies->map(fn($mail) => new MailViewDTO($mail))->toArray();
+    }
 
-                $to = $mail->recipients
-                    ->where('mail_role', 'to')
-                    ->map(fn($r) => $r->user->email ?? $r->customer->email ?? 'unknown')
-                    ->values()
-                    ->all();
-
-                $cc = $mail->recipients
-                    ->where('mail_role', 'cc')
-                    ->map(fn($r) => $r->user->email ?? $r->customer->email ?? 'unknown')
-                    ->values()
-                    ->all();
-
-                $mailType = $mail->user_type ?? 0;
-
-                return new MailViewDTO(
-                    mail: $mail,
-                    from: $from,
-                    to: $to,
-                    cc: $cc,
-                    mailType: $mailType
-                );
-            })
-            ->toArray();
+    public function getReplies(int $mailId): array {
+        $replies = Mail::where('in_reply_to', $mailId)
+            ->orderBy('created_at')
+            ->get();
+        
+        return $replies->map(fn($mail) => new MailViewDTO($mail))->toArray();
     }
 
     // public function send(MailDTO $dto): array {

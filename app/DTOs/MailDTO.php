@@ -28,6 +28,7 @@ class MailDTO {
         $dto->ticketId = $request->input('ticket_id');        
         $dto->senderId = $request->input('sender_id');
         $dto->senderType = $request->input['sender_type'];
+        $dto->queue = $request->input['queue'];
 
         $dto->toUsers = $request->input('to_users', []);
         $dto->ccUsers = $request->input('cc_users', []);

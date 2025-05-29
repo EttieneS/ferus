@@ -16,26 +16,46 @@ class AuthController extends BaseController {
     ) {
     }
 
+    // public function login(Request $request): JsonResponse {
+    //     $credentials = $request->only('email', 'password');
+    //     Log::info("Login");
+        
+    //     if (!$token = auth('api')->attempt($credentials)) {
+    //         return $this->sendError('Unauthorised.', ['error' => 'Invalid credentials']);
+    //     }
+
+    //     // $guard = Auth::guard('api');
+
+    //     // if (!$token = $guard->attempt($credentials)) {
+    //     //     return $this->sendError('Unauthorised.', ['error' => 'Unauthorised']);
+    //     // }
+
+    //     // $user = $guard->user();
+
+    //     // return $this->sendResponse([
+    //     //     'token' => $token,
+    //     //     'user' => $user
+    //     // ], 'User login successfully.');
+
+    //     $user = auth('api')->user();
+
+    //     if (!$user) {
+    //         return $this->sendError('Unauthorised.', ['error' => 'User not found after login']);
+    //     }
+
+    //     return $this->sendResponse([
+    //         'token' => $token,
+    //         'user' => $user
+    //     ], 'User login successful.');
+    // }
+
     public function login(Request $request): JsonResponse {
         $credentials = $request->only('email', 'password');
-        Log::info("Login");
-        
+        Log::info("Login attempt", $credentials);
+
         if (!$token = auth('api')->attempt($credentials)) {
             return $this->sendError('Unauthorised.', ['error' => 'Invalid credentials']);
         }
-
-        // $guard = Auth::guard('api');
-
-        // if (!$token = $guard->attempt($credentials)) {
-        //     return $this->sendError('Unauthorised.', ['error' => 'Unauthorised']);
-        // }
-
-        // $user = $guard->user();
-
-        // return $this->sendResponse([
-        //     'token' => $token,
-        //     'user' => $user
-        // ], 'User login successfully.');
 
         $user = auth('api')->user();
 
@@ -43,10 +63,22 @@ class AuthController extends BaseController {
             return $this->sendError('Unauthorised.', ['error' => 'User not found after login']);
         }
 
+        // Create the HttpOnly cookie for JWT
+        $cookie = cookie(
+            'token',           // name
+            $token,            // value
+            60 * 24,           // minutes (1 day)
+            '/',               // path
+            null,              // domain
+            true,              // secure (HTTPS only)
+            true,              // HttpOnly
+            false,             // raw
+            'Strict'           // SameSite policy
+        );
+
         return $this->sendResponse([
-            'token' => $token,
             'user' => $user
-        ], 'User login successful.');
+        ], 'User login successful.')->withCookie($cookie);
     }
 
     public function logout(): JsonResponse {

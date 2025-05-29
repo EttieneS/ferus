@@ -46,8 +46,7 @@ class TicketService {
 
     public function getAllTickets(): LengthAwarePaginator {
         try {
-            $tickets = Ticket::with([
-                'mail.customer', 
+            $tickets = Ticket::with([                
                 'mail',
                 'mail.mailBody',
                 'assignedTo',
@@ -193,7 +192,7 @@ class TicketService {
 
     public function getTicketsByQueue(int $queueId): LengthAwarePaginator {
         $tickets = Ticket::where('queue_id', $queueId)
-            ->with(['incomingMail', 'assignedTo', 'assignedBy', 'queue'])
+            ->with(['mail', 'assignedTo', 'assignedBy', 'queue'])
             ->paginate(10);
 
         $transformedTickets = $tickets->getCollection()->transform(function ($ticket) {

@@ -78,6 +78,8 @@ Route::controller(OutgoingMailController::class)->group(function () {
 
 Route::middleware(['auth:api'])->group(function () {
     Route::post('/mails/send', [MailController::class, 'send']);
+    Route::post('/mails/get-by-ticket-id', [MailController::class, 'getByTicketId']);
+    Route::post('/mails/get-replies', [MailController::class, 'getReplies']);
 });
 
 Route::post('/auth/refresh', function (): JsonResponse {
