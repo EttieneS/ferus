@@ -14,16 +14,16 @@ class MailViewDTO {
     public string $subject;
     public string $body;
     public string $sentAt;
-    
+
     public function __construct(
-        Mail $mail,        
+        Mail $mail,
     ) {
-        $this->id = $mail->id;        
+        $this->id = $mail->id;
         $this->subject = $mail->mailBody->subject;
         $this->body = $mail->mailBody->body;
         $this->sender = [$mail->getSenderDetails()];
-        $this->to = array_merge($mail->toUsers(), $mail->toCustomers());
-        $this->cc = array_merge($mail->ccUsers(), $mail->ccCustomers());        
+        $this->to = array_merge([$mail->toUsers()], [$mail->toCustomers()]);
+        $this->cc = array_merge([$mail->ccUsers()], [$mail->ccCustomers()]);
         $this->sentAt = Carbon::parse($mail->created_at)->toISOString();
     }
 }

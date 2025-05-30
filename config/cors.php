@@ -1,9 +1,21 @@
 <?php
-    return [
-        'paths' => ['api/*', 'auth/*'],
-        'allowed_methods' => ['*'],
-        'allowed_origins' => ['https://melio.dev.smith.com:4200'],
-        'allowed_headers' => ['*'],
-        'supports_credentials' => true,
-    ];
-?>
+return [
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'auth/*'],
+
+    'allowed_methods' => ['*'],
+
+    'allowed_origins' => [
+        'https://melio.dev.smith.com:4200',
+    ],
+
+    'allowed_origins_patterns' => [],
+
+    'allowed_headers' => ['*'],
+
+    'exposed_headers' => [],
+
+    'max_age' => 0,
+
+    'supports_credentials' => true,
+
+];
