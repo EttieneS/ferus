@@ -6,7 +6,7 @@ use App\Models\Ticket;
 
 class TicketViewDTO {
     public array $ticket;
-    public array $mailViewDTO;
+    public MailViewDTO $mailViewDTO;
     public ?array $assignedTo;
     public ?array $assignedBy;
     public ?array $queue;
@@ -14,7 +14,7 @@ class TicketViewDTO {
     public function __construct(Ticket $ticket) {
         $this->ticket = [
             'id' => $ticket->id,
-            'ref_number' => $ticket->ref_number,
+            'ref_number' => $this->generateRefNumber($ticket->id),
             'mail_id' => $ticket->mail_id,
             'queue_id' => $ticket->queue_id,
             'assigned_by' => $ticket->assigned_by,
@@ -25,7 +25,7 @@ class TicketViewDTO {
             'due_date' => $ticket->due_date,
         ];
 
-        $this->mailViewDTO = [new MailViewDTO($ticket->mail)];
+        $this->mailViewDTO = new MailViewDTO($ticket->mail);
 
         $this->assignedTo = optional($ticket->assignedTo)?->only(['id', 'name', 'surname', 'email']);
         $this->assignedBy = optional($ticket->assignedBy)?->only(['id', 'name', 'surname', 'email']);
@@ -35,5 +35,9 @@ class TicketViewDTO {
 
     public static function fromCollection($tickets) {
         return $tickets->map(fn($ticket) => new self($ticket))->toArray();
+    }
+
+    private function generateRefNumber(int $id): string {
+        return 'TKT-' . str_pad($id, 8, '0', STR_PAD_LEFT);
     }
 }

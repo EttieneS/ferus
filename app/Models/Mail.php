@@ -34,13 +34,39 @@ class Mail extends Model {
         return $this->belongsTo(Ticket::class, 'ticket_id');
     }
 
-    public function getSenderDetails(): User|Customer|null {
+    public function getSenderDetails(): array {
         return match ($this->sender_type) {
-            self::USER => User::find($this->sender_id),
-            self::CUSTOMER => Customer::find($this->sender_id),
+            self::USER => $this->formatUser(User::find($this->sender_id)),
+            self::CUSTOMER => $this->formatCustomer(Customer::find($this->sender_id)),
             default => null,
         };
-    }   
+    }
+    
+    private function formatUser(?User $user): ?array {
+        if (!$user) {
+            return null;
+        }
+
+        return [
+            'id' => $user->id,
+            'type' => self::USER,
+            'full_name' => trim($user->name . ' ' . $user->surname),
+            'email' => $user->email,
+        ];
+    }
+
+    private function formatCustomer(?Customer $customer): ?array {
+        if (!$customer) {
+            return null;
+        }
+
+        return [
+            'id' => $customer->id,
+            'type' => self::CUSTOMER,
+            'full_name' => $customer->full_name,
+            'email' => $customer->email,
+        ];
+    }
 
     public function mailBody() {
         return $this->hasOne(MailBody::class);

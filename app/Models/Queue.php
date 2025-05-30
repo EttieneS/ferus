@@ -73,6 +73,15 @@ class Queue extends Model {
         'deleted_at' => 'datetime',
     ];
 
+    public static function fromArray(array $data): self {
+        $queue = new self;
+
+        $queue->id = $data['id'] ?? null;
+        $queue->name = $data['name'] ?? '';
+        
+        return $queue;
+    }
+
     public function userRoles() {
         return $this->hasMany(QueueUserRole::class);
     }
