@@ -58,6 +58,7 @@ Route::controller(TicketController::class)->group(function () {
     Route::post('/tickets/personal', [TicketController::class, 'personal']);
     Route::post('/tickets/update-priority', [TicketController::class, 'updatePriority']);
     Route::post('/tickets/update-status', [TicketController::class, 'updateStatus']);
+    Route::post('/tickets/get-personal-tickets', [TicketController::class, 'getPersonalTickets']);
 });
 
 Route::controller(QueueController::class)->group(function () {
