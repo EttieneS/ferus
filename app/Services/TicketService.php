@@ -224,5 +224,5 @@ class TicketService {
         $ticket->save();
 
         return $ticket;
-    }
+    }    
 }
