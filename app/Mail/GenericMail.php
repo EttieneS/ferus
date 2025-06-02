@@ -25,7 +25,6 @@ class GenericMail extends Mailable {
                 if ($headers->has($headerName)) $headers->remove($headerName);
             }
 
-            // Add unique Message-ID to truly separate the mails
             $uniqueId = uniqid('msg_') . '.' . now()->timestamp . '@gmail.com';
             $headers->addTextHeader('Message-ID', "<{$uniqueId}>");
         });
@@ -37,16 +36,4 @@ class GenericMail extends Mailable {
                 'bodyText' => $this->bodyText
             ]);
     }
-
-    // public function headers(): void {
-    //     $this->withSwiftMessage(function ($message) {
-    //         $headers = $message->getHeaders();
-
-    //         if ($headers->has('In-Reply-To')) $headers->remove('In-Reply-To');
-    //         if ($headers->has('References')) $headers->remove('References');
-    //         if ($headers->has('Message-ID')) $headers->remove('Message-ID');
-
-    //         $headers->addTextHeader('Message-ID', '<' . uniqid() . '@gmail.com>');
-    //     });
-    // }
 }

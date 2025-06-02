@@ -15,10 +15,9 @@ class MailController extends BaseController {
         $this->mailService = $mailService;
     }
 
-    public function send(Request $request) {        
+    public function send(Request $request) {
         $dto = MailDTO::fromRequest($request);
 
-        Log::info(json_encode($dto));
         $result = $this->mailService->send($dto);
 
         return $this->sendResponse($result, 'Mail sent successfully.');
@@ -32,7 +31,7 @@ class MailController extends BaseController {
 
         return $this->sendResponse($replies, 'Mail fetched successfully.');
     }
-    
+
     public function getReplies(Request $request) {
         Log::info('request get ticket by id mailctrl: ' . json_encode($request));
 

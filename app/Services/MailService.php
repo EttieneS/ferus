@@ -32,7 +32,7 @@ class MailService {
         $replies = Mail::where('in_reply_to', $ticketId)
             ->orderBy('created_at')
             ->get();
-        
+
         return $replies->map(fn($mail) => new MailViewDTO($mail))->toArray();
     }
 
@@ -40,7 +40,7 @@ class MailService {
         $replies = Mail::where('in_reply_to', $mailId)
             ->orderBy('created_at')
             ->get();
-        
+
         return $replies->map(fn($mail) => new MailViewDTO($mail))->toArray();
     }
 
@@ -244,144 +244,325 @@ class MailService {
 
     //     return $sent;
     // }
+    //I'm not even hitting createCustomMailer, can you see a problem with the code?
 
     public function send(MailDTO $dto): array {
-        Log::info(json_encode($dto) . " dto mailservice");
-        $queue = $dto->queue;                
+        Log::error(json_encode($dto) . " dto mailservice");
+        $queue = $dto->queue;
         $sent = [];
-        
+
         $toUserEmails = [];
         $ccUserEmails = [];
         $toCustomerEmails = [];
         $ccCustomerEmails = [];
-        $ccCustomerIds = []
+        $toCustomerIds = [];
+        $ccCustomerIds = [];
 
-        foreach($dto->toUsers as $id) {
+        foreach ($dto->toUsers as $id) {
+            $user = null;
             if (is_numeric($id)) {
                 $user = User::find($id);
                 if (!$user || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) continue;
-            } 
-                        
-            $toUsersEmails[] = $user->email; 
+                $toUserEmails[] = $user->email;
+            } elseif (is_string($id) && filter_var($id, FILTER_VALIDATE_EMAIL)) {
+                $toUserEmails[] = $id;
+            }
         }
 
-        foreach($dto->ccUsers as $id) {
+        foreach ($dto->ccUsers as $id) {
+            $user = null;
             if (is_numeric($id)) {
                 $user = User::find($id);
                 if (!$user || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) continue;
-            } 
-                        
-            $ccUserEmails[] = $user->email; 
+                $ccUserEmails[] = $user->email;
+            } elseif (is_string($id) && filter_var($id, FILTER_VALIDATE_EMAIL)) {
+                $ccUserEmails[] = $id;
+            }
         }
-                
+
         foreach ($dto->toCustomers as $customerInput) {
+            $customer = null;
             if (is_numeric($customerInput)) {
                 $customer = Customer::find($customerInput);
-                if (!$customer || !filter_var($customer->email, FILTER_VALIDATE_EMAIL)) continue;
             } else {
                 if (!filter_var($customerInput, FILTER_VALIDATE_EMAIL)) continue;
                 $customer = Customer::where('email', $customerInput)->first();
                 if (!$customer) {
                     $customer = Customer::create([
-                        'full_name' => $customer->fullname ?? self::fullNameFromEmail($customerInput),
+                        'full_name' => self::fullNameFromEmail($customerInput),
                         'email' => $customerInput
                     ]);
                 }
             }
+            if (!$customer || !filter_var($customer->email, FILTER_VALIDATE_EMAIL)) continue;
             $toCustomerIds[] = $customer->id;
             $toCustomerEmails[] = $customer->email;
         }
-
+        log::info("toCustomerEmails: " . json_encode($toCustomerEmails));
         foreach ($dto->ccCustomers as $customerInput) {
+            $customer = null;
             if (is_numeric($customerInput)) {
                 $customer = Customer::find($customerInput);
-                $ccCustomerIds[] = $customer->id;
             } else {
-                if (!filter_var($customerInput, FILTER_VALIDATE_EMAIL)) continue;
-                $customer = Customer::firstOrCreate([
-                    'full_name' => $customer->fullname ?? self::fullNameFromEmail($customerInput),    
-                    'email' => $customerInput
-                ]);
+                // if (!filter_var($customerInput, FILTER_VALIDATE_EMAIL)) continue;
+                $customer = Customer::where('email', $customerInput)->first();
+                Log::info("Customer input: " . $customerInput);
+                if (!$customer) {
+                    $customer = Customer::create([
+                        'full_name' => self::fullNameFromEmail($customerInput),
+                        'email' => $customerInput
+                    ]);
+                }
             }
 
             if (!$customer || !filter_var($customer->email, FILTER_VALIDATE_EMAIL)) continue;
 
+            $ccCustomerIds[] = $customer->id;
             $ccCustomerEmails[] = $customer->email;
-
-            // $this->sendMailTo($queue, $customer->email, $dto->subject, $dto->body, $sent);
-            // $this->sendMailTo($queue, "smithettiene@yahoo.com", $dto->subject, $dto->body, $sent);
         }
 
-        $mail = Mail::create([            
-            'sender_id' => $dto->senderId ?? auth('api')->id(),
-            'sender_type' => Mail::USER,
-            'to_users' => $dto->toUsers, //json array([1 send::true], [2, send::false, )
-            'cc_users' => $dto->ccUsers,
-            'to_customers' => $toCustomerIds,
-            'cc_customers' => $ccCustomerIds,
-            'in_reply_to' => $dto->inReplyTo
-        ]);
-        
-        $mailBody = MailBody::fromMailDTO($dto);
-        $mailBody->mail_id = $mail->id;
-        $mailBody->save();
+
+        // $toUserEmails = array_merge($toUserEmails, $toCustomerEmails);
+        // $ccUserEmails = array_merge($ccUserEmails, $ccCustomerEmails);
+
+        $toUserEmails = array_merge($toUserEmails ?? [], $toCustomerEmails ?? []);
+        $ccUserEmails = array_merge($ccUserEmails ?? [], $ccCustomerEmails ?? []);
+
+        // Log::info("To User Emails: " . json_encode($toUserEmails));
+        // Log::info("CC User Emails: " . json_encode($ccUserEmails));
+        // // $toUserEmails = array_unique($toUserEmails);
+        // // $ccUserEmails = array_unique($ccUserEmails);
+
+        // // Remove duplicates and ensure all emails are strings
+        // $toUserEmails = array_filter($toUserEmails, fn($email) => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL));
+        // $ccUserEmails = array_filter($ccUserEmails, fn($email) => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL));
+        // Log::info("To User Emails after filter: " . json_encode($toUserEmails));
+        // Log::info("CC User Emails after filter: " . json_encode($ccUserEmails));
+        Log::info('About to call sendMailTo');
+
+        $this->sendMailTo($queue, $toUserEmails, $ccUserEmails, $dto->subject, $dto->body, $sent);
+
+        // $mail = Mail::create([
+        //     'sender_id' => $dto->senderId ?? auth('api')->id(),
+        //     'sender_type' => Mail::USER,
+        //     'to_users' => $dto->toUsers, //json array([1 send::true], [2, send::false, )
+        //     'cc_users' => $dto->ccUsers,
+        //     'to_customers' => $toCustomerIds,
+        //     'cc_customers' => $ccCustomerIds,
+        //     'in_reply_to' => $dto->inReplyTo
+        // ]);
+
+        // $mailBody = MailBody::fromMailDTO($dto);
+        // $mailBody->mail_id = $mail->id;
+        // $mailBody->save();
 
         return $sent;
     }
 
     public static function fullNameFromEmail(string $email): string {
+
         $name = explode('@', $email)[0] ?? '';
-             
+        Log::info("Extracted name from email: " . $name);
         $name = str_replace(['.', '_'], ' ', $name);
         return ucwords($name);
     }
 
-    private function sendMailTo(Queue $queue, array $toEmails, array $ccEmails, string $subject, string $body, array &$sent): void {
-        $toEmails = app()->environment('local') ? 'smithettiene@yahoo.com' : $toEmails;
+    // private function sendMailTo(Queue $queue, array $toEmails, array $ccEmails, string $subject, string $body, array &$sent): void {
+    //     if (app()->environment('local')) {
+    //         $toEmails = ['smithettiene@yahoo.com'];
+    //     }
+
+    //     try {
+    //         $mailer = app()->make(MailManager::class)->mailer(
+    //             $customName = $this->createCustomMailer($queue)
+    //         );
+
+    //         $mailer->to($toEmails)
+    //             ->cc($ccEmails)
+    //             ->send(new GenericMail($subject, $body));
+
+    //         Log::info("✅ Sent mail to using mailer [$customName]");
+
+    //         foreach ($toEmails as $email) {
+    //             $sent[] = [
+    //                 'email' => $email,
+    //                 'status' => 'sent',
+    //                 'sent_at' => now()->toDateTimeString()
+    //             ];
+    //         }
+
+    //         foreach ($ccEmails as $email) {
+    //             $sent[] = [
+    //                 'email' => $email,
+    //                 'status' => 'sent',
+    //                 'sent_at' => now()->toDateTimeString()
+    //             ];
+    //         }
+    //     } catch (\Throwable $e) {
+    //         Log::error("❌ Failed to send mail to: " . json_encode($toEmails) . " : " . $e->getMessage());
+
+    //         foreach ($toEmails as $email) {
+    //             $sent[] = [
+    //                 'email' => $email,
+    //                 'status' => 'failed',
+    //                 'failed_at' => now()->toDateTimeString()
+    //             ];
+    //         }
+
+    //         foreach ($ccEmails as $email) {
+    //             $sent[] = [
+    //                 'email' => $email,
+    //                 'status' => 'failed',
+    //                 'failed_at' => now()->toDateTimeString()
+    //             ];
+    //         }
+    //     }
+    // }
+
+    // private function sendMailTo(Queue $queue, array $toEmails, array $ccEmails, string $subject, string $body, array &$sent): void {
+    //     if (app()->environment('local')) {
+    //         if (empty($toEmails)) {
+    //             $toEmails = ['smithettiene@yahoo.com'];
+    //         }
+    //     }
+
+    //     try {
+    //         $customName = $this->createCustomMailer($queue);
+    //         Log::info('Mailer config: ', config("mail.mailers.$customName"));
+    //         $mailer = app()->make(MailManager::class)->mailer($customName);
+
+    //         Log::info("Mailer config", config("mail.mailers.$customName"));
+    //         Log::info("From config", [config('mail.from.address'), config('mail.from.name')]);
+
+    //         $mailer->to($toEmails)
+    //             ->cc($ccEmails)
+    //             ->send(new GenericMail($subject, $body));
+
+    //         Log::info("✅ Sent mail to using mailer [$customName]");
+
+    //         foreach ($toEmails as $email) {
+    //             $sent[] = [
+    //                 'email' => $email,
+    //                 'status' => 'sent',
+    //                 'sent_at' => now()->toDateTimeString()
+    //             ];
+    //         }
+
+    //         foreach ($ccEmails as $email) {
+    //             $sent[] = [
+    //                 'email' => $email,
+    //                 'status' => 'sent',
+    //                 'sent_at' => now()->toDateTimeString()
+    //             ];
+    //         }
+    //     } catch (\Throwable $e) {
+    //         Log::error("❌ Failed to send mail to: " . json_encode($toEmails) . " : " . $e->getMessage());
+
+    //         foreach (array_merge($toEmails, $ccEmails) as $email) {
+    //             $sent[] = [
+    //                 'email' => $email,
+    //                 'status' => 'failed',
+    //                 'failed_at' => now()->toDateTimeString()
+    //             ];
+    //         }
+    //     }
+    // }
+
+    // private function createCustomMailer(Queue $queue): string {
+    //     $customName = 'custom_' . $queue->id;
+
+
+    //     config([
+    //         "mail.mailers.$customName" => [
+    //             'transport' => 'smtp',
+    //             'host' => $queue->host,
+    //             'port' => $queue->port,
+    //             'encryption' => $queue->encryption,
+    //             'username' => $queue->username,
+    //             'password' => Crypt::decryptString($queue->password),
+    //             'timeout' => null,
+    //             'auth_mode' => null,
+    //         ],
+    //         "mail.from.address" => $queue->from_email,
+    //         "mail.from.name" => $queue->from_name,
+    //     ]);
+
+    //     Log::info('Mailer config for ' . $customName, config("mail.mailers.$customName"));
+    //     Log::info('Decrypted pass: ' . Crypt::decryptString($queue->password));
+
+
+    //     return $customName;
+    // }
+
+    private function sendMailTo(Queue $queue, array $toEmails, array $ccEmails, string $subject, string $body, array &$sent): array {
+        $queue = Queue::find($queue->id ?? null);
+
+        if (!$queue) {
+            Log::error("❌ Queue not found with ID: " . json_encode($queue));
+            return [['error' => 'Queue not found']];
+        }
+
+        // if (app()->environment('local')) {
+        //     if (empty($toEmails)) {
+        //         $toEmails = ['smithettiene@yahoo.com'];
+        //     }
+        //     $ccEmails = []; // also clear CC in local
+        // }
 
         try {
-            $mailer = app()->make(MailManager::class)->mailer(
-                $customName = $this->createCustomMailer($queue)
-            );
+            $customName = $this->createCustomMailer($queue);
+            Log::info('Mailer config: ', (array) config("mail.mailers.$customName"));
+            Log::info('TO EMAILS:', $toEmails);
+            Log::info('CC EMAILS:', $ccEmails);
+            Log::info('FROM:', [$queue->from_email, $queue->from_name]);
+
+            $mailer = app()->make(MailManager::class)->mailer($customName);
 
             $mailer->to($toEmails)
                 ->cc($ccEmails)
-                ->send(new GenericMail($subject, $body));
+                ->send(
+                    (new GenericMail($subject, $body))
+                        ->from($queue->from_email, $queue->from_name)
+                );
 
             Log::info("✅ Sent mail to using mailer [$customName]");
 
             foreach ($toEmails as $email) {
-                $sent[] = [                
-                    'email' => $email,                
+                $sent[] = [
+                    'email' => $email,
                     'status' => 'sent',
                     'sent_at' => now()->toDateTimeString()
                 ];
             }
 
             foreach ($ccEmails as $email) {
-                $sent[] = [                
-                    'email' => $email,                
+                $sent[] = [
+                    'email' => $email,
                     'status' => 'sent',
                     'sent_at' => now()->toDateTimeString()
                 ];
             }
         } catch (\Throwable $e) {
-            Log::error("❌ Failed to send mail to $email: " . $e->getMessage());
+            Log::error("❌ Failed to send mail to: " . json_encode($toEmails) . " : " . $e->getMessage());
 
-            $sent[] = [                
-                'email' => $email,                
-                'status' => 'failed',
-                'failed_at' => now()->toDateTimeString()
-            ];
+            foreach (array_merge($toEmails, $ccEmails) as $email) {
+                $sent[] = [
+                    'email' => $email,
+                    'status' => 'failed',
+                    'failed_at' => now()->toDateTimeString()
+                ];
+            }
         }
+
+        return $sent;
     }
 
     private function createCustomMailer(Queue $queue): string {
-        $customName = 'custom_' . $queue;
-        Log::info(json_encode($queue) . " used queue");
-
+        $customName = 'custom_' . $queue->id;
+        Log::info("📦 Creating custom mailer: $customName");
+        Log::info("Password: " . $queue->password);
         config([
-            "mail.mailers.$queue->mailer" => [
+            "mail.mailers.$customName" => [
                 'transport' => 'smtp',
                 'host' => $queue->host,
                 'port' => $queue->port,
@@ -390,10 +571,19 @@ class MailService {
                 'password' => Crypt::decryptString($queue->password),
                 'timeout' => null,
                 'auth_mode' => null,
-            ],
+            ]
+        ]);
+
+        config([
             "mail.from.address" => $queue->from_email,
             "mail.from.name" => $queue->from_name,
         ]);
+
+        Log::info("📦 Custom mailer [$customName] loaded");
+        Log::info("🔓 Decrypted pass: " . Crypt::decryptString($queue->password));
+        Log::info('Mailer config for ' . $customName, config("mail.mailers.$customName"));
+        Log::info("📤 From Address: " . $queue->from_email);
+        Log::info("📤 From Name: " . $queue->from_name);
 
         return $customName;
     }
