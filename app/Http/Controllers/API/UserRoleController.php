@@ -5,9 +5,10 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\API\BaseController;
 use Illuminate\Http\Request;
 use App\Services\UserRoleService;
-use App\DTOs\UserRoleDTO; // Make sure this file exists at app/DTOs/UserRoleDTO.php
+use App\DTOs\UserRoleDTO;
 use App\Models\User;
-
+use App\Models\UserRole;
+use Illuminate\Support\Facades\Log;
 class UserRoleController extends BaseController {
     protected $roleService;
 
@@ -29,21 +30,24 @@ class UserRoleController extends BaseController {
         return response()->json(['message' => 'Role created successfully', 'role' => $role], 201);
     }
 
-
-    public function assignRole(Request $request) {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'role_id' => 'required|exists:roles,id',
+    public function update(Request $request) {
+        Log::error('Update User Role Request', [
+            'request' => $request->all()
         ]);
+        
+        // $request->validate([
+        //     'user_id' => 'required|exists:users,id',
+        //     'role_id' => 'required|exists:roles,id',
+        // ]);
 
-        $roleDTO = array();
-        //the request will be an array of userroleDTO
-        foreach ($request->all() as $item) {
-            $roleDTO[] = UserRoleDTO::fromRequest($item);
+        $roleDTO = UserRoleDTO::fromRequest($request);                
+        $response = $this->roleService->update($roleDTO);        
+        
+        if (isset($response['success']) && !$response['success']) {
+            return $this->sendResponse($response['message'], $response['code']);
+
         }
 
-        $this->roleService->assignRole($roleDTO);
-
-        return response()->json(['message' => 'Role assigned successfully']);
+        return $this->sendResponse(["status" => 200], $response['message']);
     }
 }

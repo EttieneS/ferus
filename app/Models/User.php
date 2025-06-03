@@ -50,6 +50,7 @@ class User extends Authenticatable implements JWTSubject {
         'surname',
         'email',
         'password',
+        'roles'
     ];
 
     protected $hidden = [
@@ -71,10 +72,10 @@ class User extends Authenticatable implements JWTSubject {
     }
 
     public function queueRoles() {
-        return $this->hasMany(QueueUserRole::class);
+        return $this->hasMany(QueueUserRole::class, 'user_id');
     }
 
     public function tickets() {
         return $this->hasMany(Ticket::class, 'assigned_to');
-    }
+    }    
 }

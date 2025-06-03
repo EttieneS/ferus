@@ -31,7 +31,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class QueueUserRole extends Model {
     use HasFactory;
 
-    protected $table = 'queue_user_role';
+    protected $table = 'queue_user_roles';
 
     protected $fillable = [
         'queue_id',

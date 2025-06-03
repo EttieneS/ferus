@@ -4,11 +4,13 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\QueueUserRole;
+use Illuminate\Support\Collection;
 
 class UserService {
-    public function getAllUsers() {
-        return User::all();
+    public function getAllUsersWithRoles(): Collection {
+        return User::with('queueRoles')->get();
     }
+
 
     public function getUserById($id): ?User {
         return User::find($id);

@@ -7,48 +7,17 @@ use App\Http\Controllers\API\BaseController as BaseController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use App\Services\AuthService;
+use App\Services\UserRoleService;
 use Illuminate\Support\Facades\Log;
 
 class AuthController extends BaseController {
 
     public function __construct(
-        private AuthService $authService
+        private AuthService $authService,
+        private UserRoleService $userRoleService,
     ) {
     }
-
-    // public function login(Request $request): JsonResponse {
-    //     $credentials = $request->only('email', 'password');
-    //     Log::info("Login");
-        
-    //     if (!$token = auth('api')->attempt($credentials)) {
-    //         return $this->sendError('Unauthorised.', ['error' => 'Invalid credentials']);
-    //     }
-
-    //     // $guard = Auth::guard('api');
-
-    //     // if (!$token = $guard->attempt($credentials)) {
-    //     //     return $this->sendError('Unauthorised.', ['error' => 'Unauthorised']);
-    //     // }
-
-    //     // $user = $guard->user();
-
-    //     // return $this->sendResponse([
-    //     //     'token' => $token,
-    //     //     'user' => $user
-    //     // ], 'User login successfully.');
-
-    //     $user = auth('api')->user();
-
-    //     if (!$user) {
-    //         return $this->sendError('Unauthorised.', ['error' => 'User not found after login']);
-    //     }
-
-    //     return $this->sendResponse([
-    //         'token' => $token,
-    //         'user' => $user
-    //     ], 'User login successful.');
-    // }
-
+    
     public function login(Request $request): JsonResponse {
         $credentials = $request->only('email', 'password');
         Log::info("Login attempt", $credentials);
@@ -56,29 +25,49 @@ class AuthController extends BaseController {
         if (!$token = auth('api')->attempt($credentials)) {
             return $this->sendError('Unauthorised.', ['error' => 'Invalid credentials']);
         }
-
+                        
         $user = auth('api')->user();
 
         if (!$user) {
             return $this->sendError('Unauthorised.', ['error' => 'User not found after login']);
-        }
+        } else {
+            $rawRoles = $this->userRoleService->getUserRoles($user->id);
 
-        // Create the HttpOnly cookie for JWT
+            $roles = $rawRoles->reduce(function ($carry, $item) {
+                $queueId = $item['queue_id'];
+                $roleId = $item['role_id'];
+
+                if (!isset($carry[$queueId])) {
+                    $carry[$queueId] = [];
+                }
+
+                $carry[$queueId][] = $roleId;
+
+                return $carry;
+            }, []);
+        }
+        
         $cookie = cookie(
-            'token',           // name
-            $token,            // value
-            60 * 24,           // minutes (1 day)
-            '/',               // path
-            null,              // domain
-            true,              // secure (HTTPS only)
-            true,              // HttpOnly
-            false,             // raw
-            'Strict'           // SameSite policy
+            'token',
+            $token,
+            60 * 24,
+            '/',
+            null,
+            true,
+            true,
+            false,
+            'Strict'
         );
 
-        return $this->sendResponse([
-            'user' => $user
-        ], 'User login successful.')->withCookie($cookie);
+        $data = [
+            'user' => $user,
+            'roles' => $roles,
+        ];
+
+        $message = 'User login successful.';
+
+        return $this->sendResponse($data, $message)
+            ->withCookie($cookie);     
     }
 
     public function logout(): JsonResponse {

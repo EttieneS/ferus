@@ -40,6 +40,7 @@ Route::controller(UserController::class)->group(function () {
 Route::controller(UserRoleController::class)->group(function () {
     Route::post('/user-roles/index', [UserRoleController::class, 'index']);
     Route::post('/user-roles/store', [UserRoleController::class, 'store']);
+    Route::post('/user-roles/update', [UserRoleController::class, 'update']);
 });
 
 Route::controller(CustomerController::class)->group(function () {
