@@ -61,8 +61,6 @@ class TicketController extends BaseController {
     }
 
     public function assignUsers(Request $request): JsonResponse {
-        Log::info('Raw incoming request: assign users component bonobo', $request->all());
-
         /** @var \Tymon\JWTAuth\JWTGuard $jwtGuard */
         $jwtGuard = auth('api');
 
@@ -112,42 +110,30 @@ class TicketController extends BaseController {
         return $this->ticketService->forwardTicketToQueue($ticket);
     }
 
-    public function reply(Request $request): JsonResponse {
-        // return response()->json(["message" => "here"]);
-        // $validated = $request->validate([
-        //     'ticket_id' => 'required|exists:tickets,id',
-        //     'user_id' => 'required|exists:users,id',
-        //     'message' => 'required|string'
-        // ]);
+    public function getPersonalTickets(Request $request): JsonResponse {
+        $userId = Auth::id();
+        if (!$userId) {
+            return $this->sendError('Unauthorized', [], 401);
+        }
 
-        // $reply = $this->ticketReplyService->createReply($validated);
+        if ($request->input('user_id') != $userId) {
+            return $this->sendError(
+                'Unauthorised',
+                ["error" => "Unauthorised"],
+                403
+            );
+            Log::error('Unauthorized access attempt', [
+                'user_id' => $userId,
+                'requested_user_id' => $request->input('user_id'),
+                'requested_user_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                'date' => now()->toDateTimeString(),
+                'user_agent' => $request->header('User-Agent', 'unknown'),
+            ]);
+        }
 
-        // return $reply
-        //     ? response()->json(['status' => 'success', 'message' => 'Reply sent successfully'])
-        //     : response()->json(['status' => 'error', 'message' => 'Failed to send reply'], 500);
+        $paginatedDTOs = $this->ticketService->getPersonalTickets($userId);
 
-        // $reply = new TicketReply([
-        //     'ticket_id' => $request->input('ticket_id'),
-        //     'user_id' => $request->input('user_id'),
-        //     'subject' => $request->input('subject'),
-        //     'body' => $request->input('body'),
-        //     'mailer' => $request->input('mailer'), // Default mailer
-        // ]);
-
-        // $response = $this->emailService->sendEmail($reply);
-        $response = "here";
-
-        return response()->json($response);
-    }
-
-    public function personal(): JsonResponse {
-        $userId = 1;
-        $tickets = $this->ticketService->getPersonalTickets($userId);
-
-        return $this->sendResponse(
-            TicketViewDTO::fromCollection($tickets),
-            'Personal tickets fetched successfully'
-        );
+        return response()->json($paginatedDTOs);
     }
 
     public function updatePriority(Request $request) {

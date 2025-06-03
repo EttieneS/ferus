@@ -46,16 +46,16 @@ class TicketService {
 
     public function getAllTickets(): LengthAwarePaginator {
         try {
-            $tickets = Ticket::with([                
+            $tickets = Ticket::with([
                 'mail',
                 'mail.mailBody',
                 'assignedTo',
                 'assignedBy',
                 'queue'
-                ])->paginate($this->paginationLimit);
-            Log::info($tickets . " tickets");
+            ])->paginate($this->paginationLimit);
+
             $transformedTickets = TicketViewDTO::fromCollection($tickets);
-    
+
             return new LengthAwarePaginator(
                 $transformedTickets,
                 $tickets->total(),
@@ -66,8 +66,8 @@ class TicketService {
                     'query' => request()->query(),
                 ]
             );
-        } catch(Throwable $e) {
-            Log::error('Error fetching tickets: ' . $e->getMessage());                                                            
+        } catch (Throwable $e) {
+            Log::error('Error fetching tickets: ' . $e->getMessage());
             // Optionally rethrow or return empty paginator
             throw $e;
         }
@@ -208,14 +208,26 @@ class TicketService {
         );
     }
 
-    public function getPersonalTickets($userId): Collection {
+    public function getPersonalTickets($userId): LengthAwarePaginator {
+        Log::info('Fetching personal tickets for user ID: ' . $userId);
+        if (!$userId) {
+            throw new Exception('User ID is required to fetch personal tickets.');
+        }
         $tickets = Ticket::where('assigned_to', $userId)
-            ->with(['incomingMail.customer', 'queue', 'assignedTo', 'assignedBy'])
-            ->get();
+            ->with(['mail', 'assignedTo', 'assignedBy', 'queue'])
+            ->paginate(10);
 
-        Log::debug('🎯 Personal tickets', ['userId' => $userId, 'count' => $tickets->count()]);
+        $transformedTickets = $tickets->getCollection()->transform(function ($ticket) {
+            return new TicketViewDTO($ticket);
+        });
 
-        return $tickets;
+        return new LengthAwarePaginator(
+            $transformedTickets,
+            $tickets->total(),
+            $tickets->perPage(),
+            $tickets->currentPage(),
+            ['path' => request()->url()]
+        );
     }
 
     public function updatePriority(int $ticketId, int $priority): Ticket {
@@ -224,5 +236,5 @@ class TicketService {
         $ticket->save();
 
         return $ticket;
-    }    
+    }
 }

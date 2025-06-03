@@ -20,4 +20,24 @@ class UserRoleService {
             ->select('id', 'name')
             ->get();
     }
+
+    public function assignRole(array $roleDTO) {
+        foreach ($roleDTO as $item) {
+            DB::table('queue_user_roles')->insert([
+                'queue_id' => $item['queue'],
+                'user_id' => $item['user_id'],
+                'role_id' => $item['role_id'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // get error from database if the insert fails
+        // If the insert fails, you can throw an exception or return an error response
+
+
+
+
+
+    }
 }

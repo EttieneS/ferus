@@ -102,7 +102,6 @@ class MailService {
             if (is_numeric($customerInput)) {
                 $customer = Customer::find($customerInput);
             } else {
-                // if (!filter_var($customerInput, FILTER_VALIDATE_EMAIL)) continue;
                 $customer = Customer::where('email', $customerInput)->first();
                 Log::info("Customer input: " . $customerInput);
                 if (!$customer) {
@@ -124,19 +123,19 @@ class MailService {
 
         $this->sendMailTo($queue, $allToRecipients, $allCCRecipients, $dto->subject, $dto->body, $sent);
 
-        // $mail = Mail::create([
-        //     'sender_id' => $dto->senderId ?? auth('api')->id(),
-        //     'sender_type' => Mail::USER,
-        //     'to_users' => $dto->toUsers, //json array([1 send::true], [2, send::false, )
-        //     'cc_users' => $dto->ccUsers,
-        //     'to_customers' => $toCustomerIds,
-        //     'cc_customers' => $ccCustomerIds,
-        //     'in_reply_to' => $dto->inReplyTo
-        // ]);
+        $mail = Mail::create([
+            'sender_id' => $dto->senderId ?? auth('api')->id(),
+            'sender_type' => Mail::USER,
+            'to_users' => $dto->toUsers, //json array([1 send::true], [2, send::false, )
+            'cc_users' => $dto->ccUsers,
+            'to_customers' => $toCustomerIds,
+            'cc_customers' => $ccCustomerIds,
+            'in_reply_to' => $dto->inReplyTo
+        ]);
 
-        // $mailBody = MailBody::fromMailDTO($dto);
-        // $mailBody->mail_id = $mail->id;
-        // $mailBody->save();
+        $mailBody = MailBody::fromMailDTO($dto);
+        $mailBody->mail_id = $mail->id;
+        $mailBody->save();
 
         return $sent;
     }
@@ -163,8 +162,6 @@ class MailService {
                     (new GenericMail($subject, $body))
                         ->from($queue->from_email, $queue->from_name)
                 );
-
-            Log::info("✅ Sent mail to using mailer [$customName]");
 
             foreach ($toEmails as $email) {
                 $sent[] = [
@@ -213,12 +210,6 @@ class MailService {
             "mail.from.address" => $queue->from_email,
             "mail.from.name" => $queue->from_name,
         ]);
-
-        Log::info("📦 Custom mailer [$customName] loaded");
-        Log::info("🔓 Decrypted pass: " . Crypt::decryptString($queue->password));
-        Log::info('Mailer config for ' . $customName, config("mail.mailers.$customName"));
-        Log::info("📤 From Address: " . $queue->from_email);
-        Log::info("📤 From Name: " . $queue->from_name);
 
         return $customName;
     }
