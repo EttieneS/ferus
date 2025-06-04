@@ -5,12 +5,12 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\QueueUserRole;
 use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class UserService {
-    public function getAllUsersWithRoles(): Collection {
-        return User::with('queueRoles')->get();
+    public function getAllUsersWithRoles(): LengthAwarePaginator {
+        return User::with('queueRoles')->paginate(15);
     }
-
 
     public function getUserById($id): ?User {
         return User::find($id);

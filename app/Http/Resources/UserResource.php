@@ -4,21 +4,23 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Log;
 
-class UserResource extends JsonResource {    
+class UserResource extends JsonResource {
     public function toArray($request): array {
         $roleMap = [];
 
         foreach ($this->queueRoles as $entry) {
-            $qid = $entry->queue_id;
-            $rid = $entry->role_id;
-
-            if (!isset($roleMap[$qid])) {
-                $roleMap[$qid] = [];
+            if (!isset($roleMap[$entry->queue_id])) {
+                $roleMap[$entry->queue_id] = [];
             }
 
-            $roleMap[$qid][] = $rid;
+            if ($entry->role_id) {
+                $roleMap[$entry->queue_id][] = $entry->role_id;
+            }
         }
+
+        Log::info('User RoleMap:', ['user_id' => $this->id, 'roles' => $roleMap]);
 
         return [
             'id' => $this->id,

@@ -7,6 +7,7 @@ use App\Http\Controllers\API\BaseController as BaseController;
 use App\Models\User;
 use Validator;
 use App\Http\Resources\UserResource;
+use App\Http\Resources\UserResourceCollection;
 use Illuminate\Http\JsonResponse;
 use App\Services\UserService;
 use Illuminate\Support\Facades\Log;
@@ -32,9 +33,18 @@ class UserController extends BaseController {
         return $this->sendResponse($success, 'User register successfully.');
     }
 
-    public function index(): JsonResponse{
+    // public function index(): JsonResponse{
+    //     $users = $this->userService->getAllUsersWithRoles();
+    //     return $this->sendResponse(UserResource::collection($users), 'Users retrieved successfully.');
+    // }
+
+    public function index(): JsonResponse {
         $users = $this->userService->getAllUsersWithRoles();
-        return $this->sendResponse(UserResource::collection($users), 'Users retrieved successfully.');
+
+        return $this->sendResponse(
+            UserResource::collection($users)->response()->getData(true),
+            'Users retrieved successfully.'
+        );
     }
 
     public function create(Request $request): JsonResponse {
