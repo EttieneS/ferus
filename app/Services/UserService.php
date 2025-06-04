@@ -6,10 +6,11 @@ use App\Models\User;
 use App\Models\QueueUserRole;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Http\Resources\UserResource;
 
 class UserService {
     public function getAllUsersWithRoles(): LengthAwarePaginator {
-        return User::with('queueRoles')->paginate(15);
+        return User::with('queueRoles')->paginate(15);         
     }
 
     public function getUserById($id): ?User {

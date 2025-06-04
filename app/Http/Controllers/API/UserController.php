@@ -33,16 +33,14 @@ class UserController extends BaseController {
         return $this->sendResponse($success, 'User register successfully.');
     }
 
-    // public function index(): JsonResponse{
-    //     $users = $this->userService->getAllUsersWithRoles();
-    //     return $this->sendResponse(UserResource::collection($users), 'Users retrieved successfully.');
-    // }
-
     public function index(): JsonResponse {
         $users = $this->userService->getAllUsersWithRoles();
+        $usersResource = UserResource::collection($users);
 
+        Log::info('📋 Retrieved users:', $users->toArray());
+        
         return $this->sendResponse(
-            UserResource::collection($users)->response()->getData(true),
+            $usersResource,
             'Users retrieved successfully.'
         );
     }

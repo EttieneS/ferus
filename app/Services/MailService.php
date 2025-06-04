@@ -149,7 +149,9 @@ class MailService {
     }
 
     private function sendMailTo(Queue $queue, array $toEmails, array $ccEmails, string $subject, string $body, array &$sent): void {
-        $toEmails = app()->environment('local') ? 'smithettiene@yahoo.com' : $toEmails;
+        // $toEmails = app()->environment('local') ? ['smithettiene@yahoo.com'] : $toEmails;
+        $toEmails = is_array($toEmails) ? $toEmails : [$toEmails];
+        $ccEmails = is_array($ccEmails) ? $ccEmails : [$ccEmails];
 
         try {
             $mailer = app()->make(MailManager::class)->mailer(
@@ -179,10 +181,10 @@ class MailService {
                 ];
             }
         } catch (\Throwable $e) {
-            Log::error("❌ Failed to send mail to $email: " . $e->getMessage());
+            Log::error("❌ Failed to send mail to $toEmails: " . $e->getMessage());
 
             $sent[] = [
-                'email' => $email,
+                'email' => json_encode($toEmails),
                 'status' => 'failed',
                 'failed_at' => now()->toDateTimeString()
             ];
