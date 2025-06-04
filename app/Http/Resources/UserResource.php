@@ -27,7 +27,7 @@ class UserResource extends JsonResource {
             'name' => $this->name,
             'surname' => $this->surname,
             'email' => $this->email,
-            'roles' => $roleMap,
+            'roles' => json_decode(json_encode($roleMap, JSON_FORCE_OBJECT), true),
         ];
     }
 }
