@@ -4,9 +4,8 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\QueueUserRole;
-use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Log;
 
 class UserService {
     public function getAllUsersWithRoles(): LengthAwarePaginator {
@@ -40,5 +39,39 @@ class UserService {
 
     public function createUser(array $data): User {
         return User::create($data);
+    }
+
+    public function update(User $user): array {     
+        $userId = $this->getUserById($user->id);
+        if (!$user) {
+            Log::error('User not found for update', ['user_id' => $userId]);
+            return [
+                'status' => 'error',
+                'message' => 'User not found',
+                'data' => null
+            ];
+        }
+        
+        $user->name = request('name', $user->name);
+        $user->surname = request('surname', $user->surname);
+        $user->email = request('email', $user->email);                        
+        
+        // Save the user with the updated values
+        if (!$user->isDirty()) {
+            return [
+                'status' => 'success',
+                'message' => 'No changes made to the user',
+                'data' => $user
+            ];
+        }
+                
+        $user->updated_at = now(); // Update the timestamp        
+        $user->saveQuietly(); // Use saveQuietly to avoid triggering events if not needed
+                
+        return [
+            'status' => 'success',
+            'message' => 'User updated successfully',
+            'data' => $user
+        ];
     }
 }

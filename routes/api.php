@@ -35,6 +35,8 @@ Route::controller(UserController::class)->group(function () {
     Route::post('users/mail', 'mail');
     Route::post('users/searchemail', 'searchEmail');
     Route::post('users/update-rights', 'updateRights');
+    Route::post('users/get-by-id', 'getById');
+    Route::post('users/update', 'update');
 });
 
 Route::controller(UserRoleController::class)->group(function () {
