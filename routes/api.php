@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use App\Http\Controllers\API\MailController;
+use App\Http\Controllers\API\FileController;
 
 Route::middleware(['auth:api'])->get('/me', function () {
     return response()->json([
@@ -107,3 +108,5 @@ Route::post('/auth/refresh', function (): JsonResponse {
 });
 
 Route::get('/slas/index', [SlaController::class, 'index']);
+
+Route::post('/files/upload-avatar', [FileController::class, 'uploadAvatar']);
