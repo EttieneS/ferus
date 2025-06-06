@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use App\Services\AuthService;
 use App\Services\UserRoleService;
+use App\Services\UserService;
 use Illuminate\Support\Facades\Log;
 
 class AuthController extends BaseController {
@@ -15,15 +16,15 @@ class AuthController extends BaseController {
     public function __construct(
         private AuthService $authService,
         private UserRoleService $userRoleService,
+        private UserService $userService,
     ) {
     }
     
     public function login(Request $request): JsonResponse {
         $credentials = $request->only('email', 'password');
-        Log::info("Login attempt", $credentials);
-
+                
         if (!$token = auth('api')->attempt($credentials)) {
-            return $this->sendError('Unauthorised.', ['error' => 'Invalid credentials']);
+            return $this->sendError('Unauthorised.', ['error' => 'Invalid credentials'], 401, $credentials);
         }
                         
         $user = auth('api')->user();
@@ -32,7 +33,8 @@ class AuthController extends BaseController {
             return $this->sendError('Unauthorised.', ['error' => 'User not found after login']);
         } else {
             $rawRoles = $this->userRoleService->getUserRoles($user->id);
-
+            $avatar = $this->userService->getAvatar($user->id);
+            
             $roles = $rawRoles->reduce(function ($carry, $item) {
                 $queueId = $item['queue_id'];
                 $roleId = $item['role_id'];

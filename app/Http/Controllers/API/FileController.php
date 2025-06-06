@@ -6,12 +6,18 @@ use App\Services\FileService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use App\Services\UserService;
 
 class FileController extends BaseController {
     protected FileService $fileService;
+    protected UserService $userService;
 
-    public function __construct(FileService $fileService) {
+    public function __construct(
+        FileService $fileService,
+        UserService $userService
+    ) {
         $this->fileService = $fileService;
+        $this->userService = $userService;
     }
 
     public function uploadAvatar(Request $request): JsonResponse {
@@ -19,20 +25,7 @@ class FileController extends BaseController {
             'id' => 'required|integer|exists:users,id',
             'file' => 'required|file|mimes:jpg,jpeg,png|max:2048',
         ]);
-
-
-        // Log::info('FileController@uploadAvatar called', [
-        //     'user_id' => $request->input('id'),
-        //     'file' => $request->file('file') ? $request->file('file')->getClientOriginalName() : null,
-        // ]);
-
-        // $path = $this->fileService->uploadAvatar($request->file('file'), $request->input('id'));
-
-        // return response()->json([
-        //     'message' => 'Avatar uploaded successfully.',
-        //     'path' => $path,
-        // ]);
-
+                
         $userId = $request->input('id');
         $file = $request->file('file');
 
@@ -48,6 +41,8 @@ class FileController extends BaseController {
 
         $path = $this->fileService->uploadAvatar($file, $userId);
 
+        
+        $this->userService->updateAvatar($userId, $path);
         return response()->json(['path' => $path]);
     }
 }

@@ -4,41 +4,28 @@ namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use RuntimeException;
+use Illuminate\Support\Str;
 
 class FileService {
     public function uploadAvatar(UploadedFile $file, int $userId): string {
-        $testContent = "✅ FileService working\nUser ID: $userId\nFile: " . $file->getClientOriginalName();
-        $fileName = 'debug_' . $userId . '.txt';
+        $ext = $file->getClientOriginalExtension();
+        Log::info('FileService@uploadAvatar called', [
+            'user_id' => $userId,
+            'file' => $file->getClientOriginalName(),
+            'extension' => $ext,
+        ]);
 
-        // Try write to storage/app/public/debug/
-        $path = storage_path("app/public/avatar_debug");
-        if (!file_exists($path)) {
-            mkdir($path, 0777, true);
+        if (!$ext) {
+            throw new RuntimeException('Invalid file extension.');
         }
 
-        file_put_contents("$path/$fileName", $testContent);
+        $uuid = Str::uuid()->toString();
 
-        return "public/debug/$fileName";
-
-        // $ext = $file->getClientOriginalExtension();
-        // Log::info('FileService@uploadAvatar called', [
-        //     'user_id' => $userId,
-        //     'file' => $file->getClientOriginalName(),
-        //     'extension' => $ext,
-        // ]);
-
-        // if (!$ext) {
-        //     throw new \RuntimeException('Invalid file extension.');
-        // }
-
-        // $fileName = 'avatar_' . $userId . '.' . $ext;
-        // $path = 'avatars/' . $fileName;
-
-        // // if (Storage::disk('public')->exists($path)) {
-        // //     Storage::disk('public')->delete($path);
-        // // }
-
-        // return $file->storeAs('avatars', $fileName, 'public');
+        $fileName = 'avatar_'. $userId .'_'. $uuid .'.'. $ext;
+        $path = 'app/public/avatars/' . $fileName;
+        
+        $file->storeAs('avatars', $path, 'public');
+        return $fileName;
     }
 }

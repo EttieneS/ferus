@@ -16,6 +16,25 @@ class UserService {
         return User::find($id);
     }
 
+    public function updateAvatar(int $userId, string $path): bool {
+        $user = User::find($userId);
+        if (!$user) {
+            Log::error('User not found for avatar update', ['user_id' => $userId]);
+            return false;
+        }
+        
+        $user->avatar = $path;
+        return $user->save();
+    }
+
+    public function getAvatar(int $userId): ?string {
+        $user = User::find($userId);
+        if ($user && $user->avatar) {
+            return $user->avatar;
+        }
+        return null;
+    }
+
     public function updateUserQueuesAndRoles(User $user, array $queueRoles): bool {
         foreach ($queueRoles as $item) {
             $queueId = $item['id'];
