@@ -6,15 +6,11 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class FileService {
     public function uploadAvatar(UploadedFile $file, int $userId): string {
         $ext = $file->getClientOriginalExtension();
-        Log::info('FileService@uploadAvatar called', [
-            'user_id' => $userId,
-            'file' => $file->getClientOriginalName(),
-            'extension' => $ext,
-        ]);
 
         if (!$ext) {
             throw new RuntimeException('Invalid file extension.');
@@ -22,10 +18,18 @@ class FileService {
 
         $uuid = Str::uuid()->toString();
 
-        $fileName = 'avatar_'. $userId .'_'. $uuid .'.'. $ext;
-        $path = 'app/public/avatars/' . $fileName;
-        
-        $file->storeAs('avatars', $path, 'public');
+        $fileName = 'avatar_' . $userId . '_' . $uuid . '.' . $ext;
+        $path = 'avatars/' . $fileName;
+
+        Storage::disk('public')->put($path, $file->getContent());
         return $fileName;
+    }
+
+    public function exists(string $path): bool {
+        return Storage::disk('public')->exists($path);
+    }
+
+    public function delete(string $path): void {
+        Storage::disk('public')->delete($path);
     }
 }

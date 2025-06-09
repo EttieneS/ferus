@@ -109,4 +109,6 @@ Route::post('/auth/refresh', function (): JsonResponse {
 
 Route::get('/slas/index', [SlaController::class, 'index']);
 
-Route::post('/files/upload-avatar', [FileController::class, 'uploadAvatar']);
+Route::middleware(['auth:api'])->group(function () {
+    Route::post('/files/upload-avatar', [FileController::class, 'uploadAvatar']);
+});

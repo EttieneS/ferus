@@ -21,28 +21,43 @@ class FileController extends BaseController {
     }
 
     public function uploadAvatar(Request $request): JsonResponse {
-        $request->validate([
-            'id' => 'required|integer|exists:users,id',
-            'file' => 'required|file|mimes:jpg,jpeg,png|max:2048',
-        ]);
-                
-        $userId = $request->input('id');
+        $user = $request->user();
+        $userId = $user->id;
         $file = $request->file('file');
 
-        if (!$file || !$file->isValid()) {
-            Log::error('File not valid or missing', ['userId' => $userId]);
-            return response()->json(['error' => 'File missing or invalid'], 422);
+        Log::info('Avatar path', ['avatar' => $user->avatar]);
+
+        $avatarPath = 'avatars/' . $user->avatar;
+
+        try {
+            $request->validate([
+                'file' => 'required|file|mimes:jpg,jpeg,png,JPG,JPEG,PNG|max:2048',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->sendError(
+                'Validation failed',
+                $e->errors(),
+                422,
+                'Invalid avatar file format or size.'
+            );
         }
 
-        Log::info('FileController@uploadAvatar called', [
-            'user_id' => $userId,
-            'file' => $file->getClientOriginalName()
-        ]);
+        if (!$file || !$file->isValid()) {
+            return $this->sendError(
+                'File upload error',
+                [],
+                422,
+                'File is missing or unreadable.'
+            );
+        }
 
-        $path = $this->fileService->uploadAvatar($file, $userId);
+        try {
+            $path = $this->fileService->uploadAvatar($file, $userId);
+            $this->userService->updateAvatar($userId, $path);
 
-        
-        $this->userService->updateAvatar($userId, $path);
-        return response()->json(['path' => $path]);
+            return $this->sendResponse(['path' => $path], 'Avatar uploaded successfully.');
+        } catch (\Throwable $e) {
+            return $this->sendError('Upload failed', [], 500, $e->getMessage());
+        }
     }
 }
