@@ -97,10 +97,10 @@ class TicketController extends BaseController {
         }
     }
 
-
-    public function getTicketsByQueue(Request $request): JsonResponse {
-        $queueId = $request->queue_id;
-        $tickets = $this->ticketService->getTicketsByQueue($queueId);
+    public function getTicketsByQueueId(Request $request): JsonResponse {
+        $queueId = $request->input('queue_id');
+                
+        $tickets = $this->ticketService->getTicketsByQueueId($queueId);
         return response()->json($tickets);
     }
 
@@ -112,6 +112,8 @@ class TicketController extends BaseController {
 
     public function getPersonalTickets(Request $request): JsonResponse {
         $userId = Auth::id();
+        Log::info('userId: ' . $userId);
+        
         if (!$userId) {
             return $this->sendError('Unauthorized', [], 401);
         }

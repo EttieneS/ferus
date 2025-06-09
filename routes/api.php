@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use App\Http\Controllers\API\MailController;
 use App\Http\Controllers\API\FileController;
+use App\Http\Controllers\Webhook\TicketWebhookController;
 
 Route::middleware(['auth:api'])->get('/me', function () {
     return response()->json([
@@ -58,7 +59,8 @@ Route::controller(TicketController::class)->group(function () {
     Route::post('/tickets/assign-users', [TicketController::class, 'assignUsers']);
     Route::post('/tickets/forward-queue', [TicketController::class, 'forwardTicketToQueue']);
     Route::post('/tickets/reply', [TicketController::class, 'reply']);
-    Route::post('/tickets/get-by-queue', [TicketController::class, 'getTicketsByQueue']);
+    Route::post('/tickets/get-by-id/', [TicketController::class, 'getById']);
+    Route::post('/tickets/get-by-queue-id/', [TicketController::class, 'getTicketsByQueueId']);
     Route::post('/tickets/update-priority', [TicketController::class, 'updatePriority']);
     Route::post('/tickets/update-status', [TicketController::class, 'updateStatus']);
     Route::post('/tickets/get-personal-tickets', [TicketController::class, 'getPersonalTickets']);
@@ -110,3 +112,6 @@ Route::post('/auth/refresh', function (): JsonResponse {
 Route::get('/slas/index', [SlaController::class, 'index']);
 
 Route::post('/files/upload-avatar', [FileController::class, 'uploadAvatar']);
+
+Route::post('/webhooks/open-ticket-count', [TicketWebhookController::class, 'getOpenTicketCount']);
+Route::post('/webhooks/personal-ticket-count', [TicketWebhookController::class, 'getPersonalTicketCount']);

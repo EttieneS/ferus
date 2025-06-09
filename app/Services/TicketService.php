@@ -148,8 +148,6 @@ class TicketService {
         });
     }
 
-
-
     public function forwardTicketToQueue(Ticket $ticket) {
         try {
             DB::beginTransaction();
@@ -190,22 +188,22 @@ class TicketService {
         }
     }
 
-    public function getTicketsByQueue(int $queueId): LengthAwarePaginator {
+    public function getTicketsByQueueId(int $queueId): LengthAwarePaginator {
         $tickets = Ticket::where('queue_id', $queueId)
             ->with(['mail', 'assignedTo', 'assignedBy', 'queue'])
             ->paginate(10);
 
-        $transformedTickets = $tickets->getCollection()->transform(function ($ticket) {
-            return new TicketViewDTO($ticket);
-        });
+        $transformedTickets = TicketViewDTO::fromCollection($tickets);
 
         return new LengthAwarePaginator(
             $transformedTickets,
             $tickets->total(),
             $tickets->perPage(),
             $tickets->currentPage(),
-            ['path' => request()->url()]
-        );
+            [
+                'path' => request()->url(),
+                'query' => request()->query(),
+        ]);
     }
 
     public function getPersonalTickets($userId): LengthAwarePaginator {
