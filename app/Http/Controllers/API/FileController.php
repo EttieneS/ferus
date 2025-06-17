@@ -23,25 +23,13 @@ class FileController extends BaseController {
     public function uploadAvatar(Request $request): JsonResponse {
         $user = $request->user();
         $userId = $user->id;
+
+        
+
         $file = $request->file('file');
-
-        Log::info('Avatar path', ['avatar' => $user->avatar]);
-
+        
         $avatarPath = 'avatars/' . $user->avatar;
-
-        try {
-            $request->validate([
-                'file' => 'required|file|mimes:jpg,jpeg,png,JPG,JPEG,PNG|max:2048',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return $this->sendError(
-                'Validation failed',
-                $e->errors(),
-                422,
-                'Invalid avatar file format or size.'
-            );
-        }
-
+    
         if (!$file || !$file->isValid()) {
             return $this->sendError(
                 'File upload error',
