@@ -17,6 +17,7 @@ use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use App\Http\Controllers\API\MailController;
 use App\Http\Controllers\API\FileController;
 use App\Http\Controllers\Webhook\TicketWebhookController;
+use App\Http\Controllers\API\NoteController;
 
 Route::middleware(['auth:api'])->get('/me', function () {
     return response()->json([
@@ -117,3 +118,10 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/webhooks/open-ticket-count', [TicketWebhookController::class, 'getOpenTicketCount']);
     Route::post('/webhooks/personal-ticket-count', [TicketWebhookController::class, 'getPersonalTicketCount']);
 });
+
+Route::middleware(['auth:api'])->group(function () {
+    Route::post('/notes/create', [NoteController::class, 'store']);
+    Route::post('/notes/get-all-by-ticket-id', [NoteController::class, 'getAllByTicketId']);
+});
+
+
