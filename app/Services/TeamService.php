@@ -5,8 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
-class TeamService
-{
+class TeamService {
     public function createTeam(array $data) {
         $exists = DB::table('teams')->where('name', $data['name'])->exists();
 

@@ -6,16 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Services\TicketWebhookService;
 
 class TicketWebhookController extends Controller {
 
     protected $ticketWebhookService;
     
-    public function __construct(\App\Services\TicketWebhookService $ticketWebhookService) {
+    public function __construct(TicketWebhookService $ticketWebhookService) {
         $this->ticketWebhookService = $ticketWebhookService;
     }
 
-    public function getOpenTicketCount(Request $request): JsonResponse {
+    public function getOpenTicketCount(Request $request) {
         $secret = $request->header('X-Melio-Webhook-Secret');
         if ($secret !== config('webhook.secret')) {
             return response()->json(['error' => 'Unauthorized'], 401);
@@ -26,7 +27,7 @@ class TicketWebhookController extends Controller {
         return response()->json(['open_tickets' => $count]);
     }
 
-    public function getPersonalTicketCount(Request $request): JsonResponse {
+    public function getPersonalTicketCount(Request $request) {
         $userId = auth('api')->id();
         
         $secret = $request->header('X-Melio-Webhook-Secret');
