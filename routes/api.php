@@ -18,6 +18,8 @@ use App\Http\Controllers\API\MailController;
 use App\Http\Controllers\API\FileController;
 use App\Http\Controllers\Webhook\TicketWebhookController;
 use App\Http\Controllers\API\NoteController;
+use App\Http\Controllers\API\ThreadController;
+use App\Http\Controllers\API\TicketThreadController;
 
 Route::middleware(['auth:api'])->get('/me', function () {
     return response()->json([
@@ -79,7 +81,6 @@ Route::controller(IncomingMailController::class)->group(function () {
 Route::controller(OutgoingMailController::class)->group(function () {
     Route::post('/outgoing-mails/send', 'send');
     Route::post('/outgoing-mails/get-by-id', 'getByTicketId');
-
     Route::get('/outgoing-mails/test-send', 'testSend');
 });
 
@@ -122,6 +123,10 @@ Route::middleware(['auth:api'])->group(function () {
 Route::middleware(['auth:api'])->group(function () {
     Route::post('/notes/create', [NoteController::class, 'store']);
     Route::post('/notes/get-all-by-ticket-id', [NoteController::class, 'getAllByTicketId']);
+});
+
+Route::controller(ThreadController::class)->group(function () {
+    Route::post('/threads/get-by-ticket-id', [ThreadController::class, 'getByTicketId']);
 });
 
 

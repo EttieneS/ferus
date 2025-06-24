@@ -6,7 +6,7 @@ use App\Models\Mail;
 use App\Models\Note;
 use App\Enums\ThreadType;
 
-class ThreadDTO {
+class ThreadViewDTO {
     public string $type;
     public int $id;
     public string $body;
@@ -25,8 +25,7 @@ class ThreadDTO {
         return $dto;
     }
 
-    public static function fromNote(Note $note): self
-    {
+    public static function fromNote(Note $note): self {
         $dto = new self();
         $dto->type = ThreadType::NOTE;
         $dto->id = $note->id;
