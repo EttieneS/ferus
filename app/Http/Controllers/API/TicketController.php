@@ -111,8 +111,7 @@ class TicketController extends BaseController {
     }
 
     public function getPersonalTickets(Request $request): JsonResponse {
-        $userId = Auth::id();
-        Log::info('userId: ' . $userId);
+        $userId = Auth::id();        
         
         if (!$userId) {
             return $this->sendError('Unauthorized', [], 401);
@@ -124,6 +123,7 @@ class TicketController extends BaseController {
                 ["error" => "Unauthorised"],
                 403
             );
+            
             Log::error('Unauthorized access attempt', [
                 'user_id' => $userId,
                 'requested_user_id' => $request->input('user_id'),

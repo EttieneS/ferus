@@ -72,6 +72,7 @@ Route::controller(TicketController::class)->group(function () {
 Route::controller(QueueController::class)->group(function () {
     Route::post('/queues/index', [QueueController::class, 'index']);
     Route::post('/queues/create', [QueueController::class, 'store']);
+    Route::post('/queues/update', [QueueController::class, 'update']);
 });
 
 Route::controller(IncomingMailController::class)->group(function () {

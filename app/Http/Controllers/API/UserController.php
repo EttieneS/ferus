@@ -78,14 +78,11 @@ class UserController extends BaseController {
         return $this->sendResponse(new UserResource($user), 'User retrieved successfully.');
     }
 
-    public function update(Request $request): JsonResponse {
-        Log::info('🔧 Updating user with ID: ' . $request->input('id'));
-        Log::info('📦 Payload:', $request->all());
-
+    public function update(Request $request): JsonResponse {        
         $user = $this->userService->getUserById($request->input('id'));
 
         if (!$user) {
-            Log::warning('🚫 User not found.');
+            
             return $this->sendError('No user found', [], 404);
         }
         $response = $this->userService->update($user);

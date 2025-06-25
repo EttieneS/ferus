@@ -23,11 +23,7 @@ class BaseController extends Controller {
         ];
 
         if (!empty($errorMessages)) {
-            $response['data'] = $errorMessages;
-        }
-
-        if ($hint) {
-            $response['hint'] = $hint;
+            $response['message'] = json_encode($errorMessages);
         }
 
         return response()->json($response, $code);

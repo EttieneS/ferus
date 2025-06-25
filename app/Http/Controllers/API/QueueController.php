@@ -9,6 +9,7 @@ use App\Http\Controllers\API\BaseController as BaseController;
 use App\DTOs\QueueDTO;
 use Illuminate\Support\Facades\Log;
 use App\Models\Queue;
+use Throwable;
 
 class QueueController extends BaseController {
     protected $queueService;
@@ -49,7 +50,7 @@ class QueueController extends BaseController {
             $this->queueService->createQueue($queue);
 
             return $this->sendResponse(null, 'Queue created successfully.');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Queue creation failed:', [
                 'error' => $e->getMessage(),
                 'payload' => $request->all(),
@@ -60,12 +61,11 @@ class QueueController extends BaseController {
     }
 
 
-    public function update(Request $request, int $queueId): JsonResponse {
-        $validated = $request->validate([
-            'name' => 'required|string|unique:queues,name,' . $queueId . '|max:255'
-        ]);
-
-        return response()->json($this->queueService->updateQueue($queueId, $validated));
+    public function update(Request $request): JsonResponse {
+        $queue = Queue::fromRequest($request);        
+        $response = $this->queueService->updateQueue($queue);
+        
+        return response()->json($response);
     }
 
     public function destroy(int $queueId): JsonResponse {

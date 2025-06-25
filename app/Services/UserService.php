@@ -74,8 +74,7 @@ class UserService {
         $user->name = request('name', $user->name);
         $user->surname = request('surname', $user->surname);
         $user->email = request('email', $user->email);                        
-        
-        // Save the user with the updated values
+                
         if (!$user->isDirty()) {
             return [
                 'status' => 'success',

@@ -6,47 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
-/**
- * @property int $id
- * @property string $name
- * @property string $mailer
- * @property string|null $host
- * @property int|null $port
- * @property string|null $encryption
- * @property string|null $username
- * @property string|null $password
- * @property string|null $from_name
- * @property string|null $from_email
- * @property int|null $sla_id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\QueueUserRole> $userRoles
- * @property-read int|null $user_roles_count
- * @method static \Illuminate\Database\Eloquent\Builder|Queue newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Queue newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Queue onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Queue query()
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereMailer($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereHost($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue wherePort($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereEncryption($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereUsername($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue wherePassword($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereFromName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereFromEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereSlaId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Queue withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Queue withoutTrashed()
- * @mixin \Eloquent
- */
-class Queue extends Model {
+class Queue extends Model
+{
     use HasFactory, SoftDeletes;
 
     protected $table = 'queues';
@@ -73,12 +37,37 @@ class Queue extends Model {
         'deleted_at' => 'datetime',
     ];
 
-    public static function fromArray(array $data): self {
+    public static function fromArray(array $data): self
+    {
         $queue = new self;
 
         $queue->id = $data['id'] ?? null;
         $queue->name = $data['name'] ?? '';
-        
+
+        return $queue;
+    }
+
+
+    public static function fromRequest(Request $request): self {
+        $data = [
+            'name' => $request->input('name'),
+            'mailer' => $request->input('mailer'),
+            'host' => $request->input('host'),
+            'port' => $request->input('port'),
+            'encryption' => $request->input('encryption'),
+            'username' => $request->input('username'),
+            'password' => $request->input('password'),
+            'from_name' => $request->input('from_name'),
+            'from_email' => $request->input('from_email'),
+            'sla_id' => $request->input('sla_id'),
+        ];
+
+        $queue = new self($data);
+
+        if ($request->has('id')) {
+            $queue->id = (int) $request->input('id');
+        }
+
         return $queue;
     }
 
@@ -86,7 +75,8 @@ class Queue extends Model {
         return $this->hasMany(QueueUserRole::class);
     }
 
-    public function sla(): BelongsTo {
+    public function sla(): BelongsTo
+    {
         return $this->belongsTo(Sla::class);
     }
 }
